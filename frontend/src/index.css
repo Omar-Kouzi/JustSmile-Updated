@@ -1,0 +1,80 @@
+/* Import fonts */
+@import url("https://fonts.googleapis.com/css2?family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap");
+/* pages styles */
+@import url(./styles/routs/login.css);
+@import url(./styles/routs/home.css);
+@import url(./styles/routs/products.css);
+
+/* dasbboard styles */
+
+/* components styles */
+@import url(./styles/components/Navbar.css);
+
+/* colors */
+/* :root[data-theme="light"] {
+  --text: #090606;
+  --background: #faf5f7;
+  --primary: #33000c;
+  --secondary: #d194a3;
+  --accent: #ce788c;
+}
+:root[data-theme="dark"] {
+  --text: #f9f6f6;
+  --background: #0a0507;
+  --primary: #ffccd8;
+  --secondary: #6b2e3d;
+  --accent: #873145;
+} */
+:root {
+  --background: #000000;
+  --static: #56ed16ff;
+  --primary: #edfa71ff;
+  --secondary: #fff200ff;
+  --accent: #7b9f28ff;
+}
+/* :root {
+  --text: #000000;
+  --background: #d6b71c;
+  --primary: #565247;
+  --secondary: #756225;
+  --accent: #cdae47;
+  $black: #000000ff;
+$lime-cream: #EDFA71ff;
+$sunbeam-yellow: #FFF200ff;
+$spring-laser: #56ED16ff;
+$lime-moss: #7B9F28ff;
+} */
+* {
+  font-family: "Zain", sans-serif;
+  font-weight: 400;
+  padding: 0;
+  margin: 0;
+  user-select: none;
+  border: solid 1px #f9f6f6;
+}
+a,
+p,
+div {
+  color: var(--static);
+}
+h1,
+h2 {
+  color: var(--accent);
+}
+html {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background);
+}
+::-webkit-scrollbar {
+  display: none;
+}
+button {
+  padding: 10px 5px;
+  background-color: var(--primary);
+}
+button:hover {
+  background-color: var(--secondary);
+  pointer-events: ;
+}
