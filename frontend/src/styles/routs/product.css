@@ -1,0 +1,15 @@
+.Product-page {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px;
+}
+.Product-Data {
+  width: 60vw;
+}
+.Product-img{
+  width: 30vw;
+  height: 70vh;
+  
+}

@@ -4,6 +4,7 @@
 @import url(./styles/routs/login.css);
 @import url(./styles/routs/home.css);
 @import url(./styles/routs/products.css);
+@import url(./styles/routs/product.css);
 
 /* dasbboard styles */
 
@@ -26,11 +27,11 @@
   --accent: #873145;
 } */
 :root {
-  --background: #000000;
-  --static: #56ed16ff;
+  --background: #00000083;
+  --static: rgb(0, 0, 0);
   --primary: #edfa71ff;
   --secondary: #fff200ff;
-  --accent: #7b9f28ff;
+  --accent: rgb(255, 255, 255);
 }
 /* :root {
   --text: #000000;
@@ -54,12 +55,11 @@ $lime-moss: #7B9F28ff;
 }
 a,
 p,
-div {
-  color: var(--static);
-}
+div,
 h1,
 h2 {
   color: var(--accent);
+  text-decoration: none;
 }
 html {
   display: flex;
@@ -71,10 +71,15 @@ html {
   display: none;
 }
 button {
-  padding: 10px 5px;
+  padding: 5px 5px;
   background-color: var(--primary);
+  border-radius: 5px;
 }
 button:hover {
   background-color: var(--secondary);
-  pointer-events: ;
+  cursor: pointer;
+}
+.page{
+  min-height: 80vh;
+  background: var(--background);
 }

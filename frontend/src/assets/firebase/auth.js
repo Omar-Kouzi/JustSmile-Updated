@@ -4,52 +4,51 @@ import {
   signInWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
 } from "firebase/auth";
-import { setUserWithId } from "./firestore";
-import SHA256 from "crypto-js/sha256";
+import { setUserWithId, getUser } from "./firestore";
 
 const googleProvider = new GoogleAuthProvider();
 
-// 🔐 Hash UID
-const hashUID = (uid) => SHA256(uid).toString();
-
-// ✅ Create Firestore doc with default fields
+// ✅ Create Firestore doc only if it doesn't exist
 const createDefaultUserDoc = async (uid, email) => {
-  const hashedUID = hashUID(uid);
-  await setUserWithId(hashedUID, {
-    id: hashedUID,
-    email,           // stored only in Firestore
-    phone: "",
-    location: "",
-    purchases: {},
-    createdAt: new Date()
-  });
-  return { uid: hashedUID };
+  const existingUser = await getUser(uid);
+  if (!existingUser) {
+    await setUserWithId(uid, {
+      id: uid,
+      email,
+      role: "customer", // default role
+      phone: "",
+      location: "",
+      purchases: {},
+      createdAt: new Date(),
+    });
+  }
+  return { uid }; // always return uid
 };
 
-// ✅ Signup with email/password
+// Signup
 export const signup = async (email, password) => {
   if (!email || !password) throw new Error("Email and password required");
   const result = await createUserWithEmailAndPassword(auth, email, password);
   return createDefaultUserDoc(result.user.uid, email);
 };
 
-// ✅ Login with email/password
+// Login
 export const login = async (email, password) => {
   if (!email || !password) throw new Error("Email and password required");
   const result = await signInWithEmailAndPassword(auth, email, password);
-  return { uid: hashUID(result.user.uid) };
+  return { uid: result.user.uid }; // no Firestore write here
 };
 
-// ✅ Google Sign-In
+// Google Sign-In
 export const signInWithGoogle = async () => {
   const result = await signInWithPopup(auth, googleProvider);
   const user = result.user;
-  return createDefaultUserDoc(user.uid, user.email); // email stored only in Firestore
+  return createDefaultUserDoc(user.uid, user.email); // create only if not exists
 };
 
-// ✅ Logout
+// Logout
 export const logout = async () => {
   await signOut(auth);
 };

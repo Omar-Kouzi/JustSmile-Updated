@@ -7,31 +7,23 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
-  setDoc
+  setDoc,
 } from "firebase/firestore";
 
 /**
- * Save or overwrite a user in Firestore with a specific UID
- * @param {string} uid - The UID of the user
- * @param {Object} data - User data to save
+ * -----------------------------
+ * 🔧 GENERIC HELPERS
+ * -----------------------------
  */
-export const setUserWithId = async (uid, data) => {
-  try {
-    await setDoc(doc(db, "users", uid), data);
-  } catch (error) {
-    console.error(`Error saving user ${uid}:`, error);
-    throw error;
-  }
-};
 
-// Utility function to get a collection reference
+// Get collection reference
 const getCollectionRef = (collectionName) => collection(db, collectionName);
 
+// Get document reference
+const getDocRef = (collectionName, docId) => doc(db, collectionName, docId);
+
 /**
- * Add a document with a random ID to any collection.
- * @param {string} collectionName
- * @param {Object} data
- * @returns {Promise<string>} - Auto-generated document ID
+ * Add document (AUTO ID)
  */
 export const addDocument = async (collectionName, data) => {
   try {
@@ -44,30 +36,31 @@ export const addDocument = async (collectionName, data) => {
 };
 
 /**
- * Get a document from any collection.
- * @param {string} collectionName
- * @param {string} docId
- * @returns {Promise<Object|null>} - Document data or null if not found
+ * Get single document
  */
 export const getDocument = async (collectionName, docId) => {
   try {
-    const docSnap = await getDoc(doc(getCollectionRef(collectionName), docId));
+    const docSnap = await getDoc(getDocRef(collectionName, docId));
     return docSnap.exists() ? { id: docId, ...docSnap.data() } : null;
   } catch (error) {
-    console.error(`Error fetching document ${docId} from ${collectionName}:`, error);
+    console.error(
+      `Error fetching document ${docId} from ${collectionName}:`,
+      error,
+    );
     throw error;
   }
 };
 
 /**
- * Get all documents from a collection.
- * @param {string} collectionName
- * @returns {Promise<Array>} - Array of documents
+ * Get all documents
  */
 export const getAllDocuments = async (collectionName) => {
   try {
     const snapshot = await getDocs(getCollectionRef(collectionName));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
   } catch (error) {
     console.error(`Error fetching documents from ${collectionName}:`, error);
     throw error;
@@ -75,57 +68,94 @@ export const getAllDocuments = async (collectionName) => {
 };
 
 /**
- * Update a document in any collection.
- * @param {string} collectionName
- * @param {string} docId
- * @param {Object} data
+ * Update document (ONLY if exists)
  */
 export const updateDocument = async (collectionName, docId, data) => {
   try {
-    await updateDoc(doc(getCollectionRef(collectionName), docId), data);
+    const existing = await getDocument(collectionName, docId);
+
+    if (existing) {
+      await updateDoc(getDocRef(collectionName, docId), data);
+    } else {
+      await setDoc(getDocRef(collectionName, docId), data);
+    }
   } catch (error) {
-    console.error(`Error updating document ${docId} in ${collectionName}:`, error);
+    console.error(`Error updating document ${docId}:`, error);
     throw error;
   }
 };
 
 /**
- * Delete a document from any collection.
- * @param {string} collectionName
- * @param {string} docId
+ * Delete document
  */
 export const deleteDocument = async (collectionName, docId) => {
   try {
-    await deleteDoc(doc(getCollectionRef(collectionName), docId));
+    await deleteDoc(getDocRef(collectionName, docId));
   } catch (error) {
-    console.error(`Error deleting document ${docId} from ${collectionName}:`, error);
+    console.error(
+      `Error deleting document ${docId} from ${collectionName}:`,
+      error,
+    );
     throw error;
   }
 };
 
-// --- Specific Collection Handlers ---
+/**
+ * Set document (CREATE or OVERWRITE)
+ */
+export const setDocument = async (collectionName, docId, data, merge = false) => {
+  try {
+    await setDoc(getDocRef(collectionName, docId), data, { merge });
+  } catch (error) {
+    console.error(`Error setting document ${docId} in ${collectionName}:`, error);
+    throw error;
+  }
+};
 
-// Product Collection
-export const addProduct = (data) => addDocument("Product", data);
-export const getProduct = (docId) => getDocument("Product", docId);
-export const getProducts = () => getAllDocuments("Product");
-export const updateProduct = (docId, data) => updateDocument("Product", docId, data);
-export const deleteProduct = (docId) => deleteDocument("Product", docId);
+/**
+ * -----------------------------
+ * 👤 USERS
+ * -----------------------------
+ */
 
-// Order Collection
-export const addOrder = (data) => addDocument("Order", data);
-export const getOrders = () => getAllDocuments("Order");
-export const deleteOrder = (docId) => deleteDocument("Order", docId);
+export const setUserWithId = (uid, data) => setDocument("users", uid, data);
 
-// Projects Collection
-export const addProject = (data) => addDocument("Projects", data);
-export const getProject = (docId) => getDocument("Projects", docId);
-export const getProjects = () => getAllDocuments("Projects");
-export const updateProject = (docId, data) => updateDocument("Projects", docId, data);
-
-// Users Collection
 export const addUser = (data) => addDocument("users", data);
-export const getUser = (docId) => getDocument("users", docId);
+export const getUser = (uid) => getDocument("users", uid);
 export const getUsers = () => getAllDocuments("users");
-export const updateUser = (docId, data) => updateDocument("users", docId, data);
-export const deleteUser = (docId) => deleteDocument("users", docId);
+export const updateUser = (uid, data) => updateDocument("users", uid, data);
+export const deleteUser = (uid) => deleteDocument("users", uid);
+
+/**
+ * -----------------------------
+ * 🛍 PRODUCTS
+ * -----------------------------
+ */
+
+export const addProduct = (data) => addDocument("products", data);
+export const getProduct = (id) => getDocument("products", id);
+export const getProducts = () => getAllDocuments("products");
+export const updateProduct = (id, data) => updateDocument("products", id, data);
+export const deleteProduct = (id) => deleteDocument("products", id);
+
+/**
+ * -----------------------------
+ * 🛒 CART (FIXED ✅)
+ * ONE CART PER USER (UID = DOC ID)
+ * -----------------------------
+ */
+
+export const setCart = (uid, data) => setDocument("carts", uid, data);
+export const getCart = (uid) => getDocument("carts", uid);
+export const updateCart = (uid, data) => updateDocument("carts", uid, data);
+export const deleteCart = (uid) => deleteDocument("carts", uid);
+
+/**
+ * -----------------------------
+ * 📦 ORDERS (FIXED NAME ✅)
+ * -----------------------------
+ */
+
+export const addOrder = (data) => addDocument("orders", data);
+export const getOrders = () => getAllDocuments("orders");
+export const deleteOrder = (id) => deleteDocument("orders", id);

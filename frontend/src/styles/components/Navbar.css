@@ -28,7 +28,4 @@
   height: 40px;
   justify-content: space-between;
 }
-.Navbar a {
-  color: var(--background);
-  text-decoration: none;
-}
+

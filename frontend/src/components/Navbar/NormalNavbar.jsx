@@ -1,27 +1,46 @@
 import { NavLink } from "react-router-dom";
 import { RiLoginBoxLine, RiLogoutBoxLine } from "react-icons/ri";
+import { FaShoppingCart, FaUserCircle } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { logout } from "../../assets/firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../assets/firebase/config";
+import SecureLS from "secure-ls";
 import Logo from "../../assets/Logo.png";
+
+const ls = new SecureLS({ encodingType: "aes" });
 
 const NormalNavbar = () => {
   const [user, setUser] = useState(null);
+  const [uid, setUid] = useState(null);
 
   useEffect(() => {
+    // Track Firebase auth state
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        setUid(currentUser.uid);
+      } else {
+        setUid(null);
+      }
     });
 
-    return () => unsubscribe(); // cleanup
+    // Also get UID from SecureLS for persistence
+    const storedUid = ls.get("uid");
+    if (storedUid) setUid(storedUid);
+
+    return () => unsubscribe();
   }, []);
 
   // 🔓 Logout
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.setItem("Loggedin", "false");
+      ls.set("Loggedin", false);
+      ls.remove("uid");
+      ls.remove("role");
+      setUser(null);
+      setUid(null);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -33,7 +52,7 @@ const NormalNavbar = () => {
 
       <div className="Navigators">
         <NavLink to="/">Home</NavLink>
-        <NavLink to="/items">Items</NavLink>
+        <NavLink to="/products">Products</NavLink>
         <NavLink to="/about">About</NavLink>
         <NavLink to="/contact">Contact</NavLink>
 
@@ -45,20 +64,27 @@ const NormalNavbar = () => {
         ) : (
           <button
             onClick={handleLogout}
-            style={{ background: "none", border: "none", cursor: "pointer",fontSize:"16px" }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "16px",
+              color: "white",
+            }}
           >
             logout <RiLogoutBoxLine />
           </button>
         )}
 
-        {user && (
+        {/* ✅ Profile & Cart Links */}
+        {user && uid && (
           <div className="Navigators-Icons">
             <NavLink to="/cart">
-              <RiLoginBoxLine />
+              <FaShoppingCart />
             </NavLink>
 
-            <NavLink to="/profile">
-              <RiLoginBoxLine />
+            <NavLink to={`/profile/${uid}`}>
+              <FaUserCircle />
             </NavLink>
           </div>
         )}

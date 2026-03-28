@@ -3,3 +3,53 @@
   flex-direction: column;
 }
 
+.Home-Carousel {
+  height: 100vh;
+  background-image: url("https://t4.ftcdn.net/jpg/02/51/17/05/360_F_251170513_zEk5QUmamly4M10TULREDPIbC4dVRDUH.jpg");
+  background-size: cover; /* make it cover the entire container */
+  background-position: center; /* center the image */
+  background-repeat: no-repeat; /* prevent repeating */
+  display: flex;
+  flex-direction: column;
+  align-items: self-start;
+  justify-content: center;
+  padding-left: 30px;
+}
+.Home-Carousel-img {
+  width: 250px;
+  height: 250px;
+  background-color: aliceblue;
+}
+.Home-Carousel-Categories {
+  margin-top: 10px;
+}
+.Home-Carousel-Buttens {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+.Home-About {
+  display: flex;
+  align-items: center;
+}
+.Home-About-img {
+  width: 50vw;
+  height: 50vh;
+  background-color: aliceblue;
+}
+.Home-About-Data {
+  padding-left: 10px;
+  padding-right: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 50vh;
+}
+.Home-Products {
+  height: 70vh;
+}
+.Home-Products-Grid {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}

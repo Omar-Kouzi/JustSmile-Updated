@@ -1,28 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithGoogle, login, signup } from "../assets/firebase/auth";
+import { getUser } from "../assets/firebase/firestore";
+import SecureLS from "secure-ls";
+
+const ls = new SecureLS({ encodingType: "aes" });
 
 const Login = () => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  // Save login state only
-  const saveLoginState = () => {
-    localStorage.setItem("Loggedin", "true");
+
+  const saveLoginState = (uid, role) => {
+    ls.set("Loggedin", "true"); // string
+    ls.set("uid", uid);
+    ls.set("role", role); // "customer" or "admin"
+    console.log("Logged in UID:", ls.get("uid"));
+    console.log("Role:", ls.get("role"));
   };
 
-  // Email/Password Login or Signup
   const handleEmailAuth = async () => {
     try {
-      if (isSignup) {
-        await signup(email, password);
-      } else {
-        await login(email, password);
-      }
+      let authUser = isSignup
+        ? await signup(email, password)
+        : await login(email, password);
 
-      saveLoginState();
+      const userDoc = await getUser(authUser.uid);
+      const role = userDoc?.user || "customer";
+
+      saveLoginState(authUser.uid, role);
       navigate("/");
     } catch (error) {
       console.error("Email auth error:", error.message);
@@ -30,11 +37,13 @@ const Login = () => {
     }
   };
 
-  // Google Sign-In
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      saveLoginState();
+      const authUser = await signInWithGoogle();
+      const userDoc = await getUser(authUser.uid);
+      const role = userDoc?.role || "customer";
+
+      saveLoginState(authUser.uid, role);
       navigate("/");
     } catch (error) {
       console.error("Google Sign-In error:", error.message);
@@ -43,7 +52,7 @@ const Login = () => {
   };
 
   return (
-    <div className="Login-Page">
+    <div className="Login-Page page">
       <h1 className="Login-Title">{isSignup ? "Sign Up" : "Login"}</h1>
       <div className="Login-Data">
         <input
@@ -53,7 +62,6 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
           className="Login-Input"
         />
-
         <input
           type="password"
           placeholder="Password"
@@ -61,19 +69,16 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           className="Login-Input"
         />
-
         <br />
-        <button onClick={handleEmailAuth}>
-          {isSignup ? "Sign Up" : "Login"}
-        </button>
-
+        <button onClick={handleEmailAuth}>{isSignup ? "Sign Up" : "Login"}</button>
         <button onClick={handleGoogleSignIn} className="Login-Gmail">
           Sign In with Google
         </button>
-
         <br />
-
-        <p style={{ cursor: "pointer", color:"var(--static)" }} onClick={() => setIsSignup(!isSignup)}>
+        <p
+          style={{ cursor: "pointer", color: "var(--static)" }}
+          onClick={() => setIsSignup(!isSignup)}
+        >
           {isSignup
             ? "Already have an account? Login"
             : "Don't have an account? Sign Up"}
