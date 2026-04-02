@@ -7,6 +7,8 @@ import Cart from "../../routes/Cart.jsx";
 import Contact from "../../routes/Contact.jsx";
 import Login from "../../routes/Login.jsx";
 import Profile from "../../routes/Profile.jsx";
+import Order from "../../routes/Order.jsx";
+import PurchaseDetails from "../../routes/Puchase.jsx";
 function NormalRoutes() {
   return (
     <div>
@@ -19,6 +21,9 @@ function NormalRoutes() {
         <Route path="/cart" element={<Cart />} />{" "}
         <Route path="/login" element={<Login />} />{" "}
         <Route path="/profile/:id" element={<Profile />} />{" "}
+        <Route path="/order" element={<Order />} />{" "}
+        <Route path="/purchasedetail/:id" element={<PurchaseDetails />} />{" "}
+        
       </Routes>
     </div>
   );

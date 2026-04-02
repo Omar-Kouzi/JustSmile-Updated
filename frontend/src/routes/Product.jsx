@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getProduct, getCart, updateCart } from "../assets/firebase/firestore";
+import { getProduct, getCart, setCart } from "../assets/firebase/firestore";
 import SecureLS from "secure-ls";
 
 const ls = new SecureLS({ encodingType: "aes" });
@@ -23,8 +23,9 @@ const Product = () => {
     fetchProduct();
   }, [id]);
 
-  // 🛒 ADD TO CART
+  // 🛒 ADD TO CART (ONLY QUANTITY STORED)
   const handleAddToCart = async () => {
+    if (!product) return;
     try {
       const uid = ls.get("uid");
       if (!uid) return alert("Login first");
@@ -32,26 +33,16 @@ const Product = () => {
       const cart = await getCart(uid);
       let products = cart?.products || {};
 
-      if (products[id]) {
-        products[id].quantity += quantity;
-      } else {
-        products[id] = {
-          quantity: quantity,
-          price: product.price,
-        };
+      const currentQty = products[id]?.quantity || 0;
+      const newQty = currentQty + quantity;
+
+      if (newQty > product.stock) {
+        return alert(`Only ${product.stock} items available`);
       }
 
-      // 🔥 recalc total
-      let totalPrice = 0;
-      Object.values(products).forEach((p) => {
-        totalPrice += p.quantity * p.price;
-      });
+      products[id] = { quantity: newQty };
 
-      await updateCart(uid, {
-        userId: uid,
-        products,
-        totalPrice,
-      });
+      await setCart(uid, { userId: uid, products });
 
       alert("Added to cart ✅");
     } catch (error) {
@@ -67,26 +58,41 @@ const Product = () => {
         <h1>{product.name}</h1>
         <p>Price: ${product.price}</p>
         <p>{product.description}</p>
+        <p>Available: {product.stock}</p>
 
-        <div className="Product-cart">
-          <input
-            type="number"
-            min="1"
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-          />
+        {product.stock > 0 && (
+          <div className="Product-cart">
+            <input
+              type="number"
+              min="1"
+              max={product.stock}
+              value={quantity}
+              onChange={(e) => {
+                let value = Math.max(1, Number(e.target.value));
+                if (value > product.stock) value = product.stock;
+                setQuantity(value);
+              }}
+            />
 
-          <button onClick={handleAddToCart}>
-            add to cart
-          </button>
-        </div>
+            <button onClick={handleAddToCart}>add to cart</button>
+          </div>
+        )}
       </div>
 
-      <img
-        src={product.image || "placeholder-image.jpg"}
-        alt={product.name}
-        className="Product-img"
-      />
+      <div className="Product-Image-Wrap">
+        <img
+          src={product.images?.[0] || "placeholder-image.jpg"}
+          alt={product.name}
+          className="Product-img primary-img"
+        />
+        {product.images?.[1] && (
+          <img
+            src={product.images[1]}
+            alt={product.name}
+            className="Product-img hover-img"
+          />
+        )}
+      </div>
     </div>
   );
 };

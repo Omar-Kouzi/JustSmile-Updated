@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../assets/firebase/firestore";
 import { NavLink } from "react-router-dom";
+
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -16,7 +17,6 @@ const Products = () => {
         console.error("Error fetching products:", error);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -25,9 +25,15 @@ const Products = () => {
     .filter((p) => p.name?.toLowerCase().includes(search.toLowerCase()))
     .filter((p) => (availableOnly ? p.stock > 0 : true))
     .sort((a, b) => {
+      // 🔥 Always push unavailable to bottom
+      if (a.stock === 0 && b.stock > 0) return 1;
+      if (a.stock > 0 && b.stock === 0) return -1;
+
+      // Then apply your selected sorting
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
       if (sort === "name") return a.name.localeCompare(b.name);
+
       return 0;
     });
 
@@ -36,7 +42,6 @@ const Products = () => {
       <details className="Filter-Wraper">
         <summary>filter</summary>
         <div className="Filter">
-          {/* SEARCH */}
           <input
             type="text"
             placeholder="Search products..."
@@ -44,7 +49,6 @@ const Products = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          {/* SORT DROPDOWN */}
           <div className="Custom-Dropdown">
             <select value={sort} onChange={(e) => setSort(e.target.value)}>
               <option value="">Sort By</option>
@@ -54,7 +58,6 @@ const Products = () => {
             </select>
           </div>
 
-          {/* AVAILABILITY */}
           <label>
             <input
               type="checkbox"
@@ -65,17 +68,27 @@ const Products = () => {
           </label>
         </div>
       </details>
+
       <hr />
       <h1>Products</h1>
 
       <div className="Products-Grid">
         {processedProducts.map((product) => (
           <div key={product.id} className="Product-Card">
-            <img
-              src={product.image || "placeholder-image.jpg"}
-              alt={product.name}
-              className="Product-Card-img"
-            />
+            <div className="Product-Image-Wrap">
+              <img
+                src={product.images?.[0] || "placeholder-image.jpg"}
+                alt={product.name}
+                className="Product-Card-img primary-img"
+              />
+              {product.images?.[1] && (
+                <img
+                  src={product.images[1]}
+                  alt={product.name}
+                  className="Product-Card-img hover-img"
+                />
+              )}
+            </div>
 
             <div className="Product-Card-Name">
               <p>{product.name}</p>
@@ -83,7 +96,6 @@ const Products = () => {
             </div>
 
             <button className="Product-Card-Button">
-              {" "}
               <NavLink to={`/product/${product.id}`}>view more</NavLink>
             </button>
           </div>

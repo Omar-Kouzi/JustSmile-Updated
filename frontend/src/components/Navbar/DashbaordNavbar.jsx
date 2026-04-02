@@ -7,8 +7,9 @@ const DashboardNavbar = () => {
       <section className="Navbar">
         <img src={Logo} alt="icon" className="Navbar-Icon" />
         <div className="Navigators">
-          <NavLink to="/dashboard/">home</NavLink>
-          <NavLink to="/dashboard/Dproject">products</NavLink>
+          <NavLink to="/">home</NavLink>
+          <NavLink to="/dashboard/Dproducts">products</NavLink>
+          <NavLink to="/dashboard/Dorders">ordere</NavLink>
         </div>
       </section>
 

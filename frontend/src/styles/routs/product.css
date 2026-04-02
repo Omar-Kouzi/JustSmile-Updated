@@ -3,13 +3,67 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  gap: 30px;
   padding: 30px;
+  flex-wrap: wrap; /* allows wrapping on smaller screens */
 }
+
 .Product-Data {
-  width: 60vw;
+  width: 60%;
+  min-width: 300px;
 }
-.Product-img{
-  width: 30vw;
+
+.Product-Image-Wrap {
+  position: relative;
+  width: 35%;
+  min-width: 250px;
+  max-width: 500px;
   height: 70vh;
-  
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.Product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+/* Second image for hover fade */
+.hover-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  object-fit: cover;
+}
+
+.Product-Image-Wrap:hover .hover-img {
+  opacity: 1;
+}
+
+.Product-Image-Wrap:hover .primary-img {
+  transform: scale(1.05);
+}
+
+/* Mobile / small screen adjustments */
+@media screen and (max-width: 900px) {
+  .Product-page {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .Product-Data, 
+  .Product-Image-Wrap {
+    width: 100%;
+  }
+
+  .Product-Image-Wrap {
+    height: 50vh;
+  }
 }

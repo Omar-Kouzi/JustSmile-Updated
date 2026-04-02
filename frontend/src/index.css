@@ -5,11 +5,18 @@
 @import url(./styles/routs/home.css);
 @import url(./styles/routs/products.css);
 @import url(./styles/routs/product.css);
+@import url(./styles/routs/cart.css);
+@import url(./styles/routs/order.css);
+@import url(./styles/routs/profile.css);
+@import url(./styles/routs/purchase.css);
 
 /* dasbboard styles */
+@import url(./styles/dashboard/Dproducts.css);
+@import url(./styles/dashboard/Dorders.css);
 
 /* components styles */
 @import url(./styles/components/Navbar.css);
+@import url(./styles/components/footer.css);
 
 /* colors */
 /* :root[data-theme="light"] {
@@ -27,11 +34,11 @@
   --accent: #873145;
 } */
 :root {
-  --background: #00000083;
-  --static: rgb(0, 0, 0);
-  --primary: #edfa71ff;
-  --secondary: #fff200ff;
-  --accent: rgb(255, 255, 255);
+  --text: #f9f6f6;
+  --background: #0a0507;
+  --primary: #ffccd8;
+  --secondary: #6b2e3d;
+  --accent: #873145;
 }
 /* :root {
   --text: #000000;
@@ -51,14 +58,14 @@ $lime-moss: #7B9F28ff;
   padding: 0;
   margin: 0;
   user-select: none;
-  border: solid 1px #f9f6f6;
+  /* border: solid 1px #f9f6f6; */
 }
 a,
 p,
 div,
 h1,
 h2 {
-  color: var(--accent);
+  color: var(--text);
   text-decoration: none;
 }
 html {
@@ -74,12 +81,31 @@ button {
   padding: 5px 5px;
   background-color: var(--primary);
   border-radius: 5px;
+  -moz-transition: all 0.2s ease-in;
+  -o-transition: all 0.2s ease-in;
+  -webkit-transition: all 0.2s ease-in;
+  transition: all 0.2s ease-in;
 }
 button:hover {
   background-color: var(--secondary);
   cursor: pointer;
 }
-.page{
+.page {
   min-height: 80vh;
   background: var(--background);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

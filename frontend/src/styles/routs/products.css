@@ -1,8 +1,21 @@
+.Filter-Wraper{
+  padding: 10px;
+}
+.Filter{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 400px;
+}
+
+
 .Products-Grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 20px;
   padding-left: 10px;
+  padding-right: 10px;
+  justify-content: center;
 }
 
 .Product-Card {
@@ -14,22 +27,47 @@
   height: 320px;
   border-radius: 10px;
   background-color: black;
-  padding: 5px;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.Product-Image-Wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
 }
 
 .Product-Card-img {
   width: 100%;
-  height: 200px;
-  background-color: black;
-  border-radius: 10px 10px 0 0;
+  height: 100%;
   object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+/* 🔹 Second image hidden initially */
+.hover-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+
+
+/* 🔹 Slight zoom effect on hover */
+.Product-Card:hover .primary-img {
+  transform: scale(1.05);
 }
 
 .Product-Card-Name {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0 5px;
+  text-align: center;
+  margin-top: 5px;
+  color: white;
 }
 
 .Product-Card-Button {
@@ -38,15 +76,37 @@
   padding: 5px;
   border-radius: 5px;
   cursor: pointer;
+  background-color: #333;
+  color: white;
+  border: none;
+  text-align: center;
 }
 
-.Filtering-Sorting {
-  padding-left: 10px;
+/* Responsive tweaks */
+@media screen and (max-width: 1100px) {
+  .Product-Card {
+    width: 210px;
+  }
 }
-.Filter {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  padding-left: 20px;
+
+@media screen and (max-width: 950px) {
+  .Product-Card {
+    width: 200px;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .Product-Card {
+    width: 180px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .Product-Card {
+    width: 150px;
+  }
+
+  .Product-Card-img {
+    height: 150px;
+  }
 }

@@ -1,0 +1,80 @@
+.Cart-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 20px;
+}
+
+.Cart-Items {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+}
+
+.Cart-Item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+}
+
+.Cart-Item-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.Cart-Item-Data {
+  display: flex;
+  justify-content: space-between;
+  width: 500px;
+  align-items: center;
+}
+
+.Cart-Item-info {
+  display: flex;
+  flex-direction: column; /* ✅ changed to column */
+  justify-content: center;
+  gap: 5px;
+  width: 300px;
+}
+
+.Cart-Item-Edit {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-right: 20px;
+}
+
+.Cart-Item-Edit-Buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.Cart-Button {
+  padding-left: 10px;
+}
+
+/* ✅ 650px breakpoint */
+@media screen and (max-width: 650px) {
+  .Cart-Item-Data {
+    width: 360px;
+  }
+}
+
+/* ✅ 600px breakpoint */
+@media screen and (max-width: 700px) {
+  .Cart-Item-info {
+    width: 120px;
+  }
+}
+
+/* ✅ 550px breakpoint */
+@media screen and (max-width: 550px) {
+  .Cart-Item-Data {
+    width: 220px;
+  }
+  .Cart-Item-Edit{
+    flex-direction: column;
+  }
+}

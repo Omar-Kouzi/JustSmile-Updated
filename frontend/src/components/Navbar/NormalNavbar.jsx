@@ -13,9 +13,10 @@ const ls = new SecureLS({ encodingType: "aes" });
 const NormalNavbar = () => {
   const [user, setUser] = useState(null);
   const [uid, setUid] = useState(null);
+  const [role, setRole] = useState(null); // ✅ NEW
 
   useEffect(() => {
-    // Track Firebase auth state
+    // 🔐 Track Firebase auth state
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -25,9 +26,12 @@ const NormalNavbar = () => {
       }
     });
 
-    // Also get UID from SecureLS for persistence
+    // 📦 Get stored data
     const storedUid = ls.get("uid");
+    const storedRole = ls.get("role");
+
     if (storedUid) setUid(storedUid);
+    if (storedRole) setRole(storedRole);
 
     return () => unsubscribe();
   }, []);
@@ -39,8 +43,10 @@ const NormalNavbar = () => {
       ls.set("Loggedin", false);
       ls.remove("uid");
       ls.remove("role");
+
       setUser(null);
       setUid(null);
+      setRole(null);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -56,7 +62,12 @@ const NormalNavbar = () => {
         <NavLink to="/about">About</NavLink>
         <NavLink to="/contact">Contact</NavLink>
 
-        {/* ✅ Conditional Login / Logout */}
+        {/* ✅ Admin Dashboard */}
+        {user && role === "admin" && (
+          <NavLink to="/dashboard">Dashboard</NavLink>
+        )}
+
+        {/* ✅ Login / Logout */}
         {!user ? (
           <NavLink to="/login">
             login <RiLoginBoxLine />
@@ -76,7 +87,7 @@ const NormalNavbar = () => {
           </button>
         )}
 
-        {/* ✅ Profile & Cart Links */}
+        {/* ✅ Cart & Profile */}
         {user && uid && (
           <div className="Navigators-Icons">
             <NavLink to="/cart">

@@ -1,0 +1,23 @@
+.Order-Map-Cash-Holder {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+.Order-Map {
+  border-radius: 10px;
+  overflow: hidden;
+  height: 200px;
+  width: 200px;
+  margin:  10px;
+}
+@media screen and (max-width: 400px) {
+  .Order-Map-Cash-Holder{
+    flex-direction: column;
+  }
+.Order-Map{
+  height: 300px;
+  width: 300px;
+}
+}

@@ -53,3 +53,33 @@
   justify-content: space-around;
   align-items: center;
 }
+@media screen and (max-width: 800px) {
+  .Home-About-img {
+    display: none;
+  }
+
+}
+
+
+
+
+
+
+
+
+.Home-Carousel-Categories {
+  border: 1px solid;
+  padding-left: 5px;
+  font-size: 20px;
+  transition: opacity 0.8s ease;
+  opacity: 1;
+}
+
+/* Fade states */
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}

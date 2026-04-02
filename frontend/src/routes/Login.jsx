@@ -76,7 +76,7 @@ const Login = () => {
         </button>
         <br />
         <p
-          style={{ cursor: "pointer", color: "var(--static)" }}
+          style={{ cursor: "pointer", color: "var(--text)" }}
           onClick={() => setIsSignup(!isSignup)}
         >
           {isSignup

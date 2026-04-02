@@ -1,66 +1,98 @@
-import { useState } from "react";
-import { db } from "../assets/firebase/config";
-import { collection, addDoc } from "firebase/firestore";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getProduct, getCart, setCart } from "../assets/firebase/firestore";
+import SecureLS from "secure-ls";
+
+const ls = new SecureLS({ encodingType: "aes" });
 
 const Dproduct = () => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
-  const handleSubmit = async () => {
-    if (!name || !description || !price || !stock) {
-      alert("Please fill all fields.");
-      return;
-    }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await getProduct(id);
+        setProduct(data);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      }
+    };
 
+    fetchProduct();
+  }, [id]);
+
+  // 🛒 ADD TO CART (ONLY QUANTITY STORED)
+  const handleAddToCart = async () => {
+    if (!product) return;
     try {
-      await addDoc(collection(db, "products"), {
-        name,
-        description,
-        price: parseFloat(price),
-        stock: parseInt(stock),
-        createdAt: new Date(),
-      });
+      const uid = ls.get("uid");
+      if (!uid) return alert("Login first");
 
-      setName("");
-      setDescription("");
-      setPrice("");
-      setStock("");
-      alert("Product added!");
+      const cart = await getCart(uid);
+      let products = cart?.products || {};
+
+      const currentQty = products[id]?.quantity || 0;
+      const newQty = currentQty + quantity;
+
+      if (newQty > product.stock) {
+        return alert(`Only ${product.stock} items available`);
+      }
+
+      products[id] = { quantity: newQty };
+
+      await setCart(uid, { userId: uid, products });
+
+      alert("Added to cart ✅");
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Add to cart error:", error);
     }
   };
 
+  if (!product) return <div>Loading...</div>;
+
   return (
-    <div>
-      <h1>Add Product</h1>
-      <input
-        type="text"
-        placeholder="Product name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Product description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Price"
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Stock"
-        value={stock}
-        onChange={(e) => setStock(e.target.value)}
-      />
-      <button onClick={handleSubmit}>Add Product</button>
+    <div className="Product-page page">
+      <div className="Product-Data">
+        <h1>{product.name}</h1>
+        <p>Price: ${product.price}</p>
+        <p>{product.description}</p>
+        <p>Available: {product.stock}</p>
+
+        {product.stock > 0 && (
+          <div className="Product-cart">
+            <input
+              type="number"
+              min="1"
+              max={product.stock}
+              value={quantity}
+              onChange={(e) => {
+                let value = Math.max(1, Number(e.target.value));
+                if (value > product.stock) value = product.stock;
+                setQuantity(value);
+              }}
+            />
+
+            <button onClick={handleAddToCart}>add to cart</button>
+          </div>
+        )}
+      </div>
+
+      <div className="Product-Image-Wrap">
+        <img
+          src={product.images?.[0] || "placeholder-image.jpg"}
+          alt={product.name}
+          className="Product-img primary-img"
+        />
+        {product.images?.[1] && (
+          <img
+            src={product.images[1]}
+            alt={product.name}
+            className="Product-img hover-img"
+          />
+        )}
+      </div>
     </div>
   );
 };
