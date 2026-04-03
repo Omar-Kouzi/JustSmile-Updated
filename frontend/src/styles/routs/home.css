@@ -83,7 +83,12 @@
   }
 }
 
-@media screen and (max-width: 550px) {
+@media screen and (max-width: 600px) {
+  .Home-Products-Cards {
+    width: 475px;
+    overflow: hidden;
+  }
+}@media screen and (max-width: 550px) {
   .Home-Products-Cards {
     width: 315px;
     overflow: hidden;

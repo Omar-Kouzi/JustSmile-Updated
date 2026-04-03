@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../assets/firebase/firestore";
-import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -95,8 +96,11 @@ const Products = () => {
               <p>${product.price}</p>
             </div>
 
-            <button className="Product-Card-Button">
-              <NavLink to={`/product/${product.id}`}>view more</NavLink>
+            <button
+              className="Product-Card-Button"
+              onClick={() => navigate(`/product/${product.id}`)}
+            >
+              view more
             </button>
           </div>
         ))}

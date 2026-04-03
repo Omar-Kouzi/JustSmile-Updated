@@ -16,7 +16,7 @@ const Home = () => {
       try {
         const allProducts = await getProducts();
         const shuffled = allProducts.sort(() => 0.5 - Math.random());
-        setProducts(shuffled.slice(0, 3));
+        setProducts(shuffled.slice(0, 4));
       } catch (error) {
         console.error("Error fetching products:", error);
       }
