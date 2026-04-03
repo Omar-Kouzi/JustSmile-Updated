@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { RiLoginBoxLine, RiLogoutBoxLine } from "react-icons/ri";
 import { FaShoppingCart, FaUserCircle } from "react-icons/fa";
+import { FiMenu, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { logout } from "../../assets/firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
@@ -13,10 +14,10 @@ const ls = new SecureLS({ encodingType: "aes" });
 const NormalNavbar = () => {
   const [user, setUser] = useState(null);
   const [uid, setUid] = useState(null);
-  const [role, setRole] = useState(null); // ✅ NEW
+  const [role, setRole] = useState(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // 🔐 Track Firebase auth state
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -26,7 +27,6 @@ const NormalNavbar = () => {
       }
     });
 
-    // 📦 Get stored data
     const storedUid = ls.get("uid");
     const storedRole = ls.get("role");
 
@@ -36,7 +36,6 @@ const NormalNavbar = () => {
     return () => unsubscribe();
   }, []);
 
-  // 🔓 Logout
   const handleLogout = async () => {
     try {
       await logout();
@@ -47,6 +46,7 @@ const NormalNavbar = () => {
       setUser(null);
       setUid(null);
       setRole(null);
+      setOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -54,20 +54,19 @@ const NormalNavbar = () => {
 
   return (
     <section className="Navbar">
-      <img src={Logo} alt="icon" className="Navbar-Icon" />
+      <img src={Logo} alt="logo" className="Navbar-Icon" />
 
+      {/* Desktop nav */}
       <div className="Navigators">
         <NavLink to="/">Home</NavLink>
         <NavLink to="/products">Products</NavLink>
         <NavLink to="/about">About</NavLink>
         <NavLink to="/contact">Contact</NavLink>
 
-        {/* ✅ Admin Dashboard */}
         {user && role === "admin" && (
           <NavLink to="/dashboard">Dashboard</NavLink>
         )}
 
-        {/* ✅ Login / Logout */}
         {!user ? (
           <NavLink to="/login">
             login <RiLoginBoxLine />
@@ -87,7 +86,6 @@ const NormalNavbar = () => {
           </button>
         )}
 
-        {/* ✅ Cart & Profile */}
         {user && uid && (
           <div className="Navigators-Icons">
             <NavLink to="/cart">
@@ -98,6 +96,61 @@ const NormalNavbar = () => {
               <FaUserCircle />
             </NavLink>
           </div>
+        )}
+      </div>
+
+      {/* Hamburger */}
+      <div className="Navbar-Toggle" onClick={() => setOpen(true)}>
+        <FiMenu size={28} />
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`Overlay ${open ? "show" : ""}`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Mobile sidebar */}
+      <div className={`Navigators-Responsive ${open ? "open" : ""}`}>
+        <div className="Close-Btn" onClick={() => setOpen(false)}>
+          <FiX size={28} />
+        </div>
+        <NavLink to="/" onClick={() => setOpen(false)}>
+          Home
+        </NavLink>
+        <NavLink to="/products" onClick={() => setOpen(false)}>
+          Products
+        </NavLink>
+        <NavLink to="/about" onClick={() => setOpen(false)}>
+          About
+        </NavLink>
+        <NavLink to="/contact" onClick={() => setOpen(false)}>
+          Contact
+        </NavLink>
+        {user && role === "admin" && (
+          <NavLink to="/dashboard" onClick={() => setOpen(false)}>
+            Dashboard
+          </NavLink>
+        )}
+        {user && uid && (
+          <div className="Navigators-Icons">
+            <NavLink to="/cart" onClick={() => setOpen(false)}>
+              Cart <FaShoppingCart />
+            </NavLink>
+
+            <NavLink to={`/profile/${uid}`} onClick={() => setOpen(false)}>
+              Profile <FaUserCircle />
+            </NavLink>
+          </div>
+        )}{" "}
+        {!user ? (
+          <NavLink to="/login" onClick={() => setOpen(false)}>
+            login <RiLoginBoxLine />
+          </NavLink>
+        ) : (
+          <button onClick={handleLogout}>
+            logout <RiLogoutBoxLine />
+          </button>
         )}
       </div>
     </section>

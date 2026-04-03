@@ -51,7 +51,9 @@ const Home = () => {
           </div>
 
           {/* 🔥 Animated product name */}
-          <p className={`Home-Carousel-Categories ${fade ? "fade-in" : "fade-out"}`}>
+          <p
+            className={`Home-Carousel-Categories ${fade ? "fade-in" : "fade-out"}`}
+          >
             {products[currentIndex]?.name || "Loading..."}
           </p>
 
@@ -78,33 +80,35 @@ const Home = () => {
       <section className="Home-Products">
         <h1>Products</h1>
         <div className="Home-Products-Grid">
-          {products.map((product) => (
-            <div key={product.id} className="Product-Card">
-              <div className="Product-Image-Wrap">
-                <img
-                  src={product.images?.[0] || "placeholder-image.jpg"}
-                  alt={product.name}
-                  className="primary-img"
-                />
-                {product.images?.[1] && (
+          <div className="Home-Products-Cards">
+            {products.map((product) => (
+              <div key={product.id} className="Product-Card">
+                <div className="Product-Image-Wrap">
                   <img
-                    src={product.images[1]}
-                    alt={`${product.name}-hover`}
-                    className="hover-img"
+                    src={product.images?.[0] || "placeholder-image.jpg"}
+                    alt={product.name}
+                    className="primary-img"
                   />
-                )}
+                  {product.images?.[1] && (
+                    <img
+                      src={product.images[1]}
+                      alt={`${product.name}-hover`}
+                      className="hover-img"
+                    />
+                  )}
+                </div>
+
+                <p>{product.name}</p>
+
+                <button
+                  className="Product-Card-Button"
+                  onClick={() => navigate(`/product/${product.id}`)}
+                >
+                  view more
+                </button>
               </div>
-
-              <p>{product.name}</p>
-
-              <button
-                className="Product-Card-Button"
-                onClick={() => navigate(`/product/${product.id}`)}
-              >
-                view more
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <button
             style={{

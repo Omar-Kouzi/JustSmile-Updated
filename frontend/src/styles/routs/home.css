@@ -20,8 +20,23 @@
   height: 250px;
   background-color: aliceblue;
 }
+
 .Home-Carousel-Categories {
   margin-top: 10px;
+  border: 1px solid;
+  padding-left: 5px;
+  font-size: 20px;
+  transition: opacity 0.8s ease;
+  opacity: 1;
+}
+
+/* Fade states */
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
 }
 .Home-Carousel-Buttens {
   display: flex;
@@ -47,39 +62,30 @@
 }
 .Home-Products {
   height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding-left: 10px;
 }
 .Home-Products-Grid {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
+
   align-items: center;
+}
+.Home-Products-Cards {
+  display: flex;
+  gap: 10px;
 }
 @media screen and (max-width: 800px) {
   .Home-About-img {
     display: none;
   }
-
 }
 
-
-
-
-
-
-
-
-.Home-Carousel-Categories {
-  border: 1px solid;
-  padding-left: 5px;
-  font-size: 20px;
-  transition: opacity 0.8s ease;
-  opacity: 1;
-}
-
-/* Fade states */
-.fade-in {
-  opacity: 1;
-}
-
-.fade-out {
-  opacity: 0;
+@media screen and (max-width: 550px) {
+  .Home-Products-Cards {
+    width: 315px;
+    overflow: hidden;
+  }
 }
