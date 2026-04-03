@@ -1,20 +1,80 @@
 import { NavLink } from "react-router-dom";
-import Logo from "../../assets/Logo.png";
-const DashboardNavbar = () => {
-  
-  return (
-    <>
-      <section className="Navbar">
-        <img src={Logo} alt="icon" className="Navbar-Icon" />
-        <div className="Navigators">
-          <NavLink to="/">home</NavLink>
-          <NavLink to="/dashboard/Dproducts">products</NavLink>
-          <NavLink to="/dashboard/Dorders">ordere</NavLink>
-        </div>
-      </section>
+import { FiMenu, FiX } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../assets/firebase/config";
 
-  
-    </>
+const DashboardNavbar = () => {
+  const [logo, setLogo] = useState("");
+  const [open, setOpen] = useState(false);
+
+  // 🔥 Fetch logo from Firestore
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const ref = doc(db, "settings", "home");
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          setLogo(data.logo || "");
+        }
+      } catch (error) {
+        console.error("Logo fetch error:", error);
+      }
+    };
+
+    fetchLogo();
+  }, []);
+
+  return (
+    <section className="Navbar">
+      {/* 🔥 Logo */}
+      {logo && <img src={logo} alt="icon" className="Navbar-Icon" />}
+
+      {/* Desktop Nav */}
+      <div className="Navigators">
+        <NavLink to="/">Home</NavLink>
+        <NavLink to="/dashboard/">HomeDash</NavLink>
+        <NavLink to="/dashboard/Dproducts">Products</NavLink>
+        <NavLink to="/dashboard/Dabout">About</NavLink>
+        <NavLink to="/dashboard/Dorders">Orders</NavLink>
+      </div>
+
+      {/* ☰ Hamburger */}
+      <div className="Navbar-Toggle" onClick={() => setOpen(true)}>
+        <FiMenu size={28} />
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`Overlay ${open ? "show" : ""}`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* 📱 Responsive Sidebar */}
+      <div className={`Navigators-Responsive ${open ? "open" : ""}`}>
+        <div className="Close-Btn" onClick={() => setOpen(false)}>
+          <FiX size={28} />
+        </div>
+
+        <NavLink to="/" onClick={() => setOpen(false)}>
+          Home
+        </NavLink>
+        <NavLink to="/dashboard/" onClick={() => setOpen(false)}>
+          HomeDash
+        </NavLink>
+        <NavLink to="/dashboard/Dproducts" onClick={() => setOpen(false)}>
+          Products
+        </NavLink>
+        <NavLink to="/dashboard/Dabout" onClick={() => setOpen(false)}>
+          About
+        </NavLink>
+        <NavLink to="/dashboard/Dorders" onClick={() => setOpen(false)}>
+          Orders
+        </NavLink>
+      </div>
+    </section>
   );
 };
 

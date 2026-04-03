@@ -9,17 +9,17 @@ import {
 import { NavLink } from "react-router-dom";
 
 const Dproducts = () => {
-  // 🔹 Form state
+  // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [images, setImages] = useState([]);
 
-  // 🔹 Products state
+  // Products state
   const [products, setProducts] = useState([]);
 
-  // 🔹 Fetch products
+  // Fetch products
   const fetchProducts = async () => {
     try {
       const data = await getProducts();
@@ -33,19 +33,19 @@ const Dproducts = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Handle image select (max 2)
+  // Handle image select (max 2)
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files).slice(0, 2);
     setImages(files);
   };
 
-  // ❌ Remove image before upload
+  // Remove image before upload
   const removeImage = (index) => {
     const updated = images.filter((_, i) => i !== index);
     setImages(updated);
   };
 
-  // ➕ Add product
+  // Add product
   const handleSubmit = async () => {
     if (!name || !description || !price || !stock) {
       alert("Fill all fields");
@@ -76,16 +76,14 @@ const Dproducts = () => {
       setStock("");
       setImages([]);
 
-      // Refresh list
       fetchProducts();
-
       alert("Product added!");
     } catch (error) {
       console.error("Add error:", error);
     }
   };
 
-  // ❌ Delete product
+  // Delete product
   const handleDelete = async (product) => {
     const confirmDelete = window.confirm("Delete this product?");
     if (!confirmDelete) return;
@@ -96,7 +94,6 @@ const Dproducts = () => {
       }
 
       await deleteDoc(doc(db, "products", product.id));
-
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
     } catch (error) {
       console.error("Delete error:", error);
@@ -107,7 +104,7 @@ const Dproducts = () => {
     <div className="page">
       <h1>Dashboard - Products</h1>
 
-      {/* ➕ ADD PRODUCT */}
+      {/* Add Product */}
       <details>
         <summary>Add Product</summary>
         <div className="Dashboard-Add-Product">
@@ -117,21 +114,18 @@ const Dproducts = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-
           <input
             type="text"
             placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-
           <input
             type="number"
             placeholder="Price"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
-
           <input
             type="number"
             placeholder="Stock"
@@ -139,12 +133,29 @@ const Dproducts = () => {
             onChange={(e) => setStock(e.target.value)}
           />
 
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-          />
+          {/* Custom file button */}
+          <div>
+            <button
+              className="custom-file-button"
+              onClick={() => document.getElementById("imagesInput").click()}
+              style={{
+                backgroundColor: "#ffccd8",
+                padding: "8px 12px",
+                borderRadius: "5px",
+                marginBottom: "5px",
+              }}
+            >
+              Upload Images (max 2)
+            </button>
+            <input
+              id="imagesInput"
+              type="file"
+              multiple
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+            />
+          </div>
 
           {/* 👀 Preview */}
           <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
@@ -152,7 +163,7 @@ const Dproducts = () => {
               <div key={i} style={{ position: "relative" }}>
                 <img
                   src={URL.createObjectURL(img)}
-                  width="80"
+                  width="200"
                   alt="preview"
                   style={{ borderRadius: "5px" }}
                 />
@@ -183,8 +194,7 @@ const Dproducts = () => {
 
       <hr />
 
-      {/* 📦 PRODUCT LIST */}
-      <br />
+      {/* Product List */}
       <div className="Products-Grid">
         {products.map((product) => (
           <div key={product.id} className="Product-Card">
@@ -206,16 +216,13 @@ const Dproducts = () => {
             <p>{product.name}</p>
             <p>${product.price}</p>
 
-            <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
-              {/* 🔗 EDIT */}
+            <div className="product-buttons">
               <NavLink to={`/dashboard/Dproduct/${product.id}`}>
                 <button>View More</button>
               </NavLink>
-
-              {/* ❌ DELETE */}
               <button
                 onClick={() => handleDelete(product)}
-                style={{ background: "red", color: "white" }}
+                className="delete-btn"
               >
                 Delete
               </button>

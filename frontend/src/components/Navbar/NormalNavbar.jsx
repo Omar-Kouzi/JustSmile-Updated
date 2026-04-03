@@ -5,9 +5,9 @@ import { FiMenu, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { logout } from "../../assets/firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../assets/firebase/config";
+import { auth, db } from "../../assets/firebase/config";
+import { doc, getDoc } from "firebase/firestore";
 import SecureLS from "secure-ls";
-import Logo from "../../assets/Logo.png";
 
 const ls = new SecureLS({ encodingType: "aes" });
 
@@ -16,6 +16,7 @@ const NormalNavbar = () => {
   const [uid, setUid] = useState(null);
   const [role, setRole] = useState(null);
   const [open, setOpen] = useState(false);
+  const [logo, setLogo] = useState(""); // 🔥 dynamic logo
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -36,6 +37,25 @@ const NormalNavbar = () => {
     return () => unsubscribe();
   }, []);
 
+  // 🔥 Fetch logo from Firestore
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const ref = doc(db, "settings", "home");
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          setLogo(data.logo || "");
+        }
+      } catch (error) {
+        console.error("Logo fetch error:", error);
+      }
+    };
+
+    fetchLogo();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -54,7 +74,8 @@ const NormalNavbar = () => {
 
   return (
     <section className="Navbar">
-      <img src={Logo} alt="logo" className="Navbar-Icon" />
+      {/* 🔥 Dynamic logo */}
+      {logo && <img src={logo} alt="logo" className="Navbar-Icon" />}
 
       {/* Desktop nav */}
       <div className="Navigators">
@@ -115,6 +136,7 @@ const NormalNavbar = () => {
         <div className="Close-Btn" onClick={() => setOpen(false)}>
           <FiX size={28} />
         </div>
+
         <NavLink to="/" onClick={() => setOpen(false)}>
           Home
         </NavLink>
@@ -127,11 +149,13 @@ const NormalNavbar = () => {
         <NavLink to="/contact" onClick={() => setOpen(false)}>
           Contact
         </NavLink>
+
         {user && role === "admin" && (
           <NavLink to="/dashboard" onClick={() => setOpen(false)}>
             Dashboard
           </NavLink>
         )}
+
         {user && uid && (
           <div className="Navigators-Icons">
             <NavLink to="/cart" onClick={() => setOpen(false)}>
@@ -142,7 +166,8 @@ const NormalNavbar = () => {
               Profile <FaUserCircle />
             </NavLink>
           </div>
-        )}{" "}
+        )}
+
         {!user ? (
           <NavLink to="/login" onClick={() => setOpen(false)}>
             login <RiLoginBoxLine />

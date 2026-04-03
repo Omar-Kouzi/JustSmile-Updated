@@ -5,7 +5,7 @@
 
 .Home-Carousel {
   height: 100vh;
-  background-image: url("https://t4.ftcdn.net/jpg/02/51/17/05/360_F_251170513_zEk5QUmamly4M10TULREDPIbC4dVRDUH.jpg");
+  /* background-image: url("https://t4.ftcdn.net/jpg/02/51/17/05/360_F_251170513_zEk5QUmamly4M10TULREDPIbC4dVRDUH.jpg"); */
   background-size: cover; /* make it cover the entire container */
   background-position: center; /* center the image */
   background-repeat: no-repeat; /* prevent repeating */
@@ -23,6 +23,7 @@
 
 .Home-Carousel-Categories {
   margin-top: 10px;
+  margin-bottom: 10px;
   border: 1px solid;
   padding-left: 5px;
   font-size: 20px;

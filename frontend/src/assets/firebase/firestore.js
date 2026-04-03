@@ -8,6 +8,7 @@ import {
   deleteDoc,
   getDocs,
   setDoc,
+  arrayRemove,
 } from "firebase/firestore";
 
 /**
@@ -15,16 +16,9 @@ import {
  * 🔧 GENERIC HELPERS
  * -----------------------------
  */
-
-// Get collection reference
 const getCollectionRef = (collectionName) => collection(db, collectionName);
-
-// Get document reference
 const getDocRef = (collectionName, docId) => doc(db, collectionName, docId);
 
-/**
- * Add document (AUTO ID)
- */
 export const addDocument = async (collectionName, data) => {
   try {
     const docRef = await addDoc(getCollectionRef(collectionName), data);
@@ -35,25 +29,16 @@ export const addDocument = async (collectionName, data) => {
   }
 };
 
-/**
- * Get single document
- */
 export const getDocument = async (collectionName, docId) => {
   try {
     const docSnap = await getDoc(getDocRef(collectionName, docId));
     return docSnap.exists() ? { id: docId, ...docSnap.data() } : null;
   } catch (error) {
-    console.error(
-      `Error fetching document ${docId} from ${collectionName}:`,
-      error,
-    );
+    console.error(`Error fetching document ${docId} from ${collectionName}:`, error);
     throw error;
   }
 };
 
-/**
- * Get all documents
- */
 export const getAllDocuments = async (collectionName) => {
   try {
     const snapshot = await getDocs(getCollectionRef(collectionName));
@@ -67,13 +52,9 @@ export const getAllDocuments = async (collectionName) => {
   }
 };
 
-/**
- * Update document (ONLY if exists)
- */
 export const updateDocument = async (collectionName, docId, data) => {
   try {
     const existing = await getDocument(collectionName, docId);
-
     if (existing) {
       await updateDoc(getDocRef(collectionName, docId), data);
     } else {
@@ -85,24 +66,15 @@ export const updateDocument = async (collectionName, docId, data) => {
   }
 };
 
-/**
- * Delete document
- */
 export const deleteDocument = async (collectionName, docId) => {
   try {
     await deleteDoc(getDocRef(collectionName, docId));
   } catch (error) {
-    console.error(
-      `Error deleting document ${docId} from ${collectionName}:`,
-      error,
-    );
+    console.error(`Error deleting document ${docId} from ${collectionName}:`, error);
     throw error;
   }
 };
 
-/**
- * Set document (CREATE or OVERWRITE)
- */
 export const setDocument = async (collectionName, docId, data, merge = false) => {
   try {
     await setDoc(getDocRef(collectionName, docId), data, { merge });
@@ -117,9 +89,7 @@ export const setDocument = async (collectionName, docId, data, merge = false) =>
  * 👤 USERS
  * -----------------------------
  */
-
 export const setUserWithId = (uid, data) => setDocument("users", uid, data);
-
 export const addUser = (data) => addDocument("users", data);
 export const getUser = (uid) => getDocument("users", uid);
 export const getUsers = () => getAllDocuments("users");
@@ -131,7 +101,6 @@ export const deleteUser = (uid) => deleteDocument("users", uid);
  * 🛍 PRODUCTS
  * -----------------------------
  */
-
 export const addProduct = (data) => addDocument("products", data);
 export const getProduct = (id) => getDocument("products", id);
 export const getProducts = () => getAllDocuments("products");
@@ -140,11 +109,9 @@ export const deleteProduct = (id) => deleteDocument("products", id);
 
 /**
  * -----------------------------
- * 🛒 CART (FIXED ✅)
- * ONE CART PER USER (UID = DOC ID)
+ * 🛒 CART
  * -----------------------------
  */
-
 export const setCart = (uid, data) => setDocument("carts", uid, data);
 export const getCart = (uid) => getDocument("carts", uid);
 export const updateCart = (uid, data) => updateDocument("carts", uid, data);
@@ -152,10 +119,23 @@ export const deleteCart = (uid) => deleteDocument("carts", uid);
 
 /**
  * -----------------------------
- * 📦 ORDERS (FIXED NAME ✅)
+ * 📦 ORDERS
  * -----------------------------
  */
-
 export const addOrder = (data) => addDocument("orders", data);
 export const getOrders = () => getAllDocuments("orders");
 export const deleteOrder = (id) => deleteDocument("orders", id);
+
+/**
+ * -----------------------------
+ * 🏠 SETTINGS (HOME / ABOUT)
+ * -----------------------------
+ */
+export const getHomeSettings = () => getDocument("settings", "home");
+export const updateHomeSettings = (data) => updateDocument("settings", "home", data);
+export const setHomeSettings = (data) => setDocument("settings", "home", data);
+
+export const getAboutSettings = () => getDocument("settings", "about");
+export const updateAboutSettings = (data) => updateDocument("settings", "about", data);
+export const setAboutSettings = (data) => setDocument("settings", "about", data);
+

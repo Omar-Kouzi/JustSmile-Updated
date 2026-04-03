@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { db } from "../assets/firebase/config";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
-
+import { deleteDoc, getDoc } from "firebase/firestore";
 const Dorder = () => {
   const [orders, setOrders] = useState([]);
 
@@ -62,7 +62,33 @@ const Dorder = () => {
       console.error("Error updating payment status:", error);
     }
   };
+  const deleteOrder = async (orderId, userId) => {
+    try {
+      // 🔻 Delete order
+      await deleteDoc(doc(db, "orders", orderId));
 
+      // 🔻 Remove from user purchases
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+
+        const updatedPurchases = (userData.purchases || []).filter(
+          (p) => p.orderId !== orderId,
+        );
+
+        await updateDoc(userRef, {
+          purchases: updatedPurchases,
+        });
+      }
+
+      // 🔻 Update UI
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
   return (
     <div className="page">
       <h1>Orders Dashboard</h1>
@@ -73,8 +99,8 @@ const Dorder = () => {
       ) : (
         <div>
           {orders.map((order) => (
-            <div>
-              <div key={order.id} className="Order-Card">
+            <div key={order.id}>
+              <div  className="Order-Card">
                 <div className="Order-Data">
                   <div className="Order-Data-Holder">
                     <p className="Order-Strong">Order ID:</p> {order.id}
@@ -146,7 +172,13 @@ const Dorder = () => {
                   </button>
                 </div>
               </div>
-              <hr />
+              <hr />{" "}
+              <button
+                style={{ background: "red", color: "#fff" }}
+                onClick={() => deleteOrder(order.id, order.userId)}
+              >
+                Delete Order
+              </button>
             </div>
           ))}
         </div>

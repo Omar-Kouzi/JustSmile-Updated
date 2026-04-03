@@ -13,6 +13,8 @@
 /* dasbboard styles */
 @import url(./styles/dashboard/Dproducts.css);
 @import url(./styles/dashboard/Dorders.css);
+@import url(./styles/dashboard/Dabout.css);
+@import url(./styles/dashboard/Dhome.css);
 
 /* components styles */
 @import url(./styles/components/Navbar.css);
@@ -95,17 +97,40 @@ button:hover {
   background: var(--background);
 }
 
+/* Hide the actual file input */
+input[type="file"] {
+  display: none;
+}
 
+/* Custom button for file input */
+.custom-file-button {
+  display: inline-block;
+  background-color: var(--primary);
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in;
+}
 
+.custom-file-button:hover {
+  background-color: var(--secondary);
+}
 
-
-
-
-
-
-
-
-
-
-
-
+/* Optional: preview container for selected files */
+.file-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+.file-preview img {
+  width: 80px;
+  border-radius: 5px;
+}
+input  {
+  padding: 8px 12px;
+  width: 300px;
+  border-radius: 5px;
+  border: var(--secondary);
+  margin-top: 5px; font-size: 19px; 
+}

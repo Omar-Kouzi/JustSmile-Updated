@@ -62,6 +62,7 @@ const Products = () => {
           <label>
             <input
               type="checkbox"
+               style={{ width:"25px"}}
               checked={availableOnly}
               onChange={(e) => setAvailableOnly(e.target.checked)}
             />

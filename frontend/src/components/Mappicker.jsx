@@ -1,4 +1,4 @@
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { useState } from "react";
 
 const containerStyle = {
@@ -7,24 +7,52 @@ const containerStyle = {
 };
 
 const center = {
-  lat: 33.8938, // Beirut default
+  lat: 33.8938,
   lng: 35.5018,
 };
 
 const MapPicker = ({ onSelect }) => {
   const [position, setPosition] = useState(null);
+  const [address, setAddress] = useState("");
+
+  const mapAPI = process.env.REACT_APP_MapAPI;
+
+  // ✅ Proper loader (loads ONCE)
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: mapAPI,
+  });
 
   const handleClick = (e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
 
-    const location = { lat, lng };
-    setPosition(location);
-    onSelect(location); // send to parent
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        const formattedAddress = results[0].formatted_address;
+
+        const location = {
+          lat,
+          lng,
+          address: formattedAddress,
+        };
+
+        setPosition({ lat, lng });
+        setAddress(formattedAddress);
+        onSelect(location);
+      } else {
+        const location = { lat, lng, address: "Address not found" };
+        setPosition({ lat, lng });
+        onSelect(location);
+      }
+    });
   };
-const mapAPI = process.env.REACT_APP_MapAPI
-return (
-    <LoadScript googleMapsApiKey={mapAPI}>
+
+  if (!isLoaded) return <div>Loading map...</div>;
+
+  return (
+    <>
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
@@ -33,7 +61,13 @@ return (
       >
         {position && <Marker position={position} />}
       </GoogleMap>
-    </LoadScript>
+
+      {address && (
+        <div style={{ padding: "10px", background: "#fff" }}>
+          <strong>Selected:</strong> {address}
+        </div>
+      )}
+    </>
   );
 };
 

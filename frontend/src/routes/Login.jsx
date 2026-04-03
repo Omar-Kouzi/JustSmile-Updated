@@ -16,8 +16,6 @@ const Login = () => {
     ls.set("Loggedin", "true"); // string
     ls.set("uid", uid);
     ls.set("role", role); // "customer" or "admin"
-    console.log("Logged in UID:", ls.get("uid"));
-    console.log("Role:", ls.get("role"));
   };
 
   const handleEmailAuth = async () => {

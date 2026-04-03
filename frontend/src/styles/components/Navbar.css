@@ -17,7 +17,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 370px;
+  width: 450px;
 }
 
 /* Hamburger button */
@@ -96,7 +96,7 @@
   .Navbar-Toggle {
     display: block;
     right: 20px;
-    position: absolute  ;
+    position: absolute;
   }
   .Navigators-Icons {
     width: 110px;

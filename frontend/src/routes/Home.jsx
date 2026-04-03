@@ -2,15 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { getProducts } from "../assets/firebase/firestore";
-import Logo from "../assets/Logo.png";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../assets/firebase/config";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
 
+  const [aboutText, setAboutText] = useState("");
+  const [aboutImg, setAboutImg] = useState("");
+
+  const [logo, setLogo] = useState(""); // home logo
+  const [background, setBackground] = useState(""); // carousel background
+  const [title, setHomeTitle] = useState(""); // carousel background
+
   const navigate = useNavigate();
 
+  // 🔹 Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -21,11 +30,47 @@ const Home = () => {
         console.error("Error fetching products:", error);
       }
     };
-
     fetchProducts();
   }, []);
 
-  // 🔥 Fade animation logic
+  // 🔹 Fetch About data
+  useEffect(() => {
+    const fetchAbout = async () => {
+      try {
+        const refDoc = doc(db, "settings", "about");
+        const snap = await getDoc(refDoc);
+        if (snap.exists()) {
+          const data = snap.data();
+          setAboutText(data.homeText || "");
+          setAboutImg(data.img1 || "");
+        }
+      } catch (error) {
+        console.error("Error fetching about data:", error);
+      }
+    };
+    fetchAbout();
+  }, []);
+
+  // 🔹 Fetch Home settings (logo + background)
+  useEffect(() => {
+    const fetchHome = async () => {
+      try {
+        const refDoc = doc(db, "settings", "home");
+        const snap = await getDoc(refDoc);
+        if (snap.exists()) {
+          const data = snap.data();
+          setLogo(data.logo || "");
+          setBackground(data.background || "");
+          setHomeTitle(data.title);
+        }
+      } catch (error) {
+        console.error("Error fetching home settings:", error);
+      }
+    };
+    fetchHome();
+  }, []);
+
+  // 🔥 Fade animation logic for carousel
   useEffect(() => {
     if (products.length === 0) return;
 
@@ -43,11 +88,21 @@ const Home = () => {
 
   return (
     <div className="Home-Page page">
-      <section className="Home-Carousel">
+      {/* ===== Home Carousel ===== */}
+      <section
+        className="Home-Carousel"
+        style={{
+          backgroundImage: background ? `url(${background})` : "none",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="Home-Carousel-Data">
           <div>
-            <img className="Home-Carousel-img" src={Logo} alt="Logo" />
-            <h1 style={{ fontSize: "50px" }}>Just Smile</h1>
+            {logo && (
+              <img className="Home-Carousel-img" src={logo} alt="Logo" />
+            )}
+            <h1 style={{ fontSize: "50px" }}>{title}</h1>
           </div>
 
           {/* 🔥 Animated product name */}
@@ -59,24 +114,23 @@ const Home = () => {
 
           <div className="Home-Carousel-Buttens">
             <button onClick={() => navigate("/products")}>more</button>
-            <button>about</button>
+            <button onClick={() => navigate("/about")}>about</button>
           </div>
         </div>
       </section>
 
+      {/* ===== About Section ===== */}
       <section className="Home-About">
-        <img src="sdj" alt="" className="Home-About-img" />
+        {aboutImg && (
+          <img src={aboutImg} alt="About" className="Home-About-img" />
+        )}
         <div className="Home-About-Data">
           <h1>About</h1>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nesciunt
-            sequi fuga nobis perferendis. Aut, eligendi vitae eius provident
-            nobis, placeat voluptatibus totam quam quo nam facilis laborum minus
-            tempore minima.
-          </p>
+          <p>{aboutText || "Loading about text..."}</p>
         </div>
       </section>
 
+      {/* ===== Products Section ===== */}
       <section className="Home-Products">
         <h1>Products</h1>
         <div className="Home-Products-Grid">

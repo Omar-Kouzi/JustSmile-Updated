@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getCart,
-  getProduct,
-  setCart,
-} from "../assets/firebase/firestore";
+import { getCart, getProduct, setCart } from "../assets/firebase/firestore";
 import { db } from "../assets/firebase/config";
 import {
   collection,
@@ -11,6 +7,7 @@ import {
   doc,
   updateDoc,
   arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 import SecureLS from "secure-ls";
 import MapPicker from "../components/Mappicker";
@@ -21,10 +18,17 @@ const Order = () => {
   const [cart, setCartState] = useState(null);
   const [productsData, setProductsData] = useState({});
   const [location, setLocation] = useState(null);
+
+  // 🔥 NEW
+  const [defaultLocation, setDefaultLocation] = useState(null);
+  const [useDefault, setUseDefault] = useState(false);
+
   const [payment, setPayment] = useState("cash");
   const [wishRef, setWishRef] = useState("");
 
-  // Fetch cart
+  // =========================
+  // 🔹 FETCH CART
+  // =========================
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -69,9 +73,39 @@ const Order = () => {
     fetchCart();
   }, []);
 
-  // Calculate total
+  // =========================
+  // 🔹 FETCH USER DEFAULT LOCATION
+  // =========================
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        const uid = ls.get("uid");
+        if (!uid) return;
+
+        const userRef = doc(db, "users", uid);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+          const data = snap.data();
+
+          if (data?.location?.address) {
+            setDefaultLocation(data.location);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching user location:", err);
+      }
+    };
+
+    fetchUserLocation();
+  }, []);
+
+  // =========================
+  // 🔹 TOTAL PRICE
+  // =========================
   const productList = cart?.products ? Object.entries(cart.products) : [];
   let totalPrice = 0;
+
   productList.forEach(([id, item]) => {
     const product = productsData[id];
     if (product && !item.unavailable)
@@ -80,14 +114,28 @@ const Order = () => {
 
   const isWishValid = payment === "wish" && wishRef.trim().length === 9;
 
+  // =========================
+  // 🔹 USE DEFAULT LOCATION
+  // =========================
+  const handleUseDefault = () => {
+    if (defaultLocation) {
+      setLocation(defaultLocation);
+      setUseDefault(true);
+    }
+  };
+
+  // =========================
+  // 🔹 ORDER
+  // =========================
   const handleOrder = async () => {
     const uid = ls.get("uid");
-    if (!location) return alert("Please select your location on the map");
+
+    if (!location) return alert("Please select your location");
+
     if (payment === "wish" && !isWishValid)
       return alert("Transaction reference must be exactly 9 characters");
 
     try {
-      // 1️⃣ Add to orders collection
       const orderDoc = await addDoc(collection(db, "orders"), {
         userId: uid,
         products: cart.products,
@@ -106,13 +154,13 @@ const Order = () => {
         createdAt: new Date(),
       });
 
-      // 2️⃣ Add a simplified purchase record to user's document
       const purchases = Object.entries(cart.products).map(([id, item]) => ({
         productId: id,
         quantity: item.quantity,
       }));
 
       const userRef = doc(db, "users", uid);
+
       await updateDoc(userRef, {
         purchases: arrayUnion({
           orderId: orderDoc.id,
@@ -122,13 +170,28 @@ const Order = () => {
         }),
       });
 
-      // 3️⃣ Clear cart
       await setCart(uid, { userId: uid, products: {} });
 
       alert("Order placed!");
+      // 🔻 REDUCE STOCK
+      for (let [id, item] of Object.entries(cart.products)) {
+        const productRef = doc(db, "products", id);
+
+        const productSnap = await getDoc(productRef);
+        if (!productSnap.exists()) continue;
+
+        const productData = productSnap.data();
+
+        const newStock = (productData.stock || 0) - item.quantity;
+
+        await updateDoc(productRef, {
+          stock: newStock < 0 ? 0 : newStock,
+        });
+      }
       setCartState({ userId: uid, products: {} });
       setLocation(null);
       setWishRef("");
+      setUseDefault(false);
     } catch (error) {
       console.error("Order error:", error);
     }
@@ -141,7 +204,7 @@ const Order = () => {
       <h1>Order Summary</h1>
       <hr />
 
-      {/* Products */}
+      {/* PRODUCTS */}
       <div>
         {productList.map(([id, item]) => {
           const product = productsData[id];
@@ -165,26 +228,54 @@ const Order = () => {
         })}
       </div>
 
-      {/* Total */}
+      {/* TOTAL */}
       <h2>Total: ${totalPrice}</h2>
       <hr />
 
-      {/* Map & Payment */}
+      {/* LOCATION + PAYMENT */}
       <div className="Order-Map-Cash-Holder">
         <div className="Order-Map-Holder">
           <p>Select Delivery Location</p>
-          <div className="Order-Map">
-            <MapPicker onSelect={setLocation} />
-          </div>
+
+          {/* ✅ DEFAULT LOCATION OPTION */}
+          {defaultLocation && !useDefault && (
+            <div>
+              <p>Use your saved address?</p>
+              <p>
+                <strong>{defaultLocation.address}</strong>
+              </p>
+
+              <button onClick={handleUseDefault}>Use this</button>
+              <button onClick={() => setUseDefault(false)}>
+                Choose another
+              </button>
+            </div>
+          )}
+
+          {/* ✅ MAP */}
+          {!useDefault && (
+            <div className="Order-Map">
+              <MapPicker
+                onSelect={(loc) => {
+                  setLocation(loc);
+                  setUseDefault(false);
+                }}
+              />
+            </div>
+          )}
+
+          {/* ✅ SHOW ADDRESS */}
           {location && (
             <p>
-              Selected: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+              Selected: <strong>{location.address}</strong>
             </p>
           )}
         </div>
 
+        {/* PAYMENT */}
         <div>
           <p>Payment Method</p>
+
           <select value={payment} onChange={(e) => setPayment(e.target.value)}>
             <option value="cash">Cash on Delivery</option>
             <option value="wish">Wish Transfer</option>
@@ -200,6 +291,7 @@ const Order = () => {
               <p>
                 <strong>Name:</strong> Omar Kouzi
               </p>
+
               <input
                 type="text"
                 placeholder="Transaction reference (9 chars)"
@@ -207,6 +299,7 @@ const Order = () => {
                 maxLength={9}
                 onChange={(e) => setWishRef(e.target.value)}
               />
+
               {wishRef && wishRef.length !== 9 && (
                 <p style={{ color: "red", fontSize: "12px" }}>
                   Reference must be exactly 9 characters
@@ -239,6 +332,7 @@ const Order = () => {
       >
         Confirm Order
       </button>
+
       <br />
     </div>
   );
