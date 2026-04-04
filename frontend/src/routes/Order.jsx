@@ -45,10 +45,14 @@ const Order = () => {
           if (!product || product.stock === 0) {
             updatedProducts[id].quantity = 0;
             updatedProducts[id].unavailable = true;
-            tempProductsData[id] = product || { name: item.name, image: item.image };
+            tempProductsData[id] = product || {
+              name: item.name,
+              image: item.image,
+            };
           } else {
             tempProductsData[id] = product;
-            if (item.quantity > product.stock) updatedProducts[id].quantity = product.stock;
+            if (item.quantity > product.stock)
+              updatedProducts[id].quantity = product.stock;
             updatedProducts[id].unavailable = false;
           }
         }
@@ -89,7 +93,8 @@ const Order = () => {
   let totalPrice = 0;
   productList.forEach(([id, item]) => {
     const product = productsData[id];
-    if (product && !item.unavailable) totalPrice += item.quantity * product.price;
+    if (product && !item.unavailable)
+      totalPrice += item.quantity * product.price;
   });
 
   const isWishValid = payment === "wish" && wishRef.trim().length === 9;
@@ -107,7 +112,8 @@ const Order = () => {
     const uid = ls.get("uid");
 
     if (!location) return alert("Please select your location");
-    if (payment === "wish" && !isWishValid) return alert("Transaction reference must be exactly 9 characters");
+    if (payment === "wish" && !isWishValid)
+      return alert("Transaction reference must be exactly 9 characters");
 
     try {
       const orderDoc = await addDoc(collection(db, "orders"), {
@@ -115,8 +121,14 @@ const Order = () => {
         products: cart.products,
         location,
         paymentMethod: payment,
-        paymentDetails: payment === "wish" ? { reference: wishRef.trim() } : null,
-        paymentStatus: payment === "cash" ? "pending" : payment === "wish" ? "waiting_confirmation" : "pending_card",
+        paymentDetails:
+          payment === "wish" ? { reference: wishRef.trim() } : null,
+        paymentStatus:
+          payment === "cash"
+            ? "pending"
+            : payment === "wish"
+              ? "waiting_confirmation"
+              : "pending_card",
         total: totalPrice,
         status: "pending",
         createdAt: new Date(),
@@ -160,12 +172,28 @@ const Order = () => {
   };
 
   if (!cart || !cart.products) return <div>Loading...</div>;
+  const wishLink = "https://whish.money/invoice/pay/?q=UMfWkvIMQ";
+  const wishAppLink = "whishmoney://invoice/pay/?q=UMfWkvIMQ";
 
+  const openWish = () => {
+    // Try opening app first
+    const timeout = setTimeout(() => {
+      // If app didn’t open in 2s, open web link
+      window.open(wishLink, "_blank");
+    }, 1500);
+
+    window.location.href = wishAppLink;
+  };
   return (
     <div className="page">
       <h1>Order Summary</h1>
       <hr />
-
+<button
+  onClick={openWish}
+  style={{ marginTop: "10px" }}
+>
+  Go to Wish Transfer (${totalPrice})
+</button>
       {/* PRODUCTS */}
       <div>
         {productList.map(([id, item]) => {
@@ -174,7 +202,11 @@ const Order = () => {
           return (
             <div key={id}>
               <div className="Cart-Item-Data Purchase-Item-Data">
-                <img src={product?.images?.[0] || item.image} alt={product?.name || item.name} className="Cart-Item-img" />
+                <img
+                  src={product?.images?.[0] || item.image}
+                  alt={product?.name || item.name}
+                  className="Cart-Item-img"
+                />
                 <h3>{product?.name || item.name}</h3>
                 <p>${product?.price}</p>
                 <p>Qty: {item.quantity}</p>
@@ -197,20 +229,31 @@ const Order = () => {
           {defaultLocation && !useDefault && (
             <div>
               <p>Use your saved address?</p>
-              <p><strong>{defaultLocation.address}</strong></p>
+              <p>
+                <strong>{defaultLocation.address}</strong>
+              </p>
               <button onClick={handleUseDefault}>Use this</button>
-              <button onClick={() => setUseDefault(false)}>Choose another</button>
+              <button onClick={() => setUseDefault(false)}>
+                Choose another
+              </button>
             </div>
           )}
 
           {!useDefault && (
             <div className="Order-Map">
-              <MapPicker onSelect={(loc) => { setLocation(loc); setUseDefault(false); }} />
+              <MapPicker
+                onSelect={(loc) => {
+                  setLocation(loc);
+                  setUseDefault(false);
+                }}
+              />
             </div>
           )}
 
           {location && (
-            <p>Selected: <strong>{location.address}</strong></p>
+            <p>
+              Selected: <strong>{location.address}</strong>
+            </p>
           )}
         </div>
 
@@ -225,8 +268,12 @@ const Order = () => {
           {payment === "wish" && (
             <div className="Payment-Box">
               <p>Send the total via Whish Money:</p>
-              <p><strong>Phone:</strong> 81284452</p>
-              <p><strong>Name:</strong> Omar Kouzi</p>
+              <p>
+                <strong>Phone:</strong> 81284452
+              </p>
+              <p>
+                <strong>Name:</strong> Omar Kouzi
+              </p>
               <input
                 type="text"
                 placeholder="Transaction reference (9 chars)"
@@ -235,13 +282,18 @@ const Order = () => {
                 onChange={(e) => setWishRef(e.target.value)}
               />
               {wishRef && wishRef.length !== 9 && (
-                <p style={{ color: "red", fontSize: "12px" }}>Reference must be exactly 9 characters</p>
+                <p style={{ color: "red", fontSize: "12px" }}>
+                  Reference must be exactly 9 characters
+                </p>
               )}
 
               {/* OPEN WISH MONEY BUTTON */}
               <button
                 onClick={() => {
-                  window.open("https://whish.money/invoice/pay/?q=UMfWkvIMQ", "_blank");
+                  window.open(
+                    "https://whish.money/invoice/pay/?q=UMfWkvIMQ",
+                    "_blank",
+                  );
                 }}
                 style={{ marginTop: "10px" }}
               >
@@ -250,7 +302,11 @@ const Order = () => {
             </div>
           )}
 
-          {payment === "card" && <div className="Payment-Box"><p>Credit Card payment coming soon</p></div>}
+          {payment === "card" && (
+            <div className="Payment-Box">
+              <p>Credit Card payment coming soon</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -265,7 +321,8 @@ const Order = () => {
           left: "39%",
           marginBottom: "10px",
           opacity: payment === "wish" && !isWishValid ? 0.5 : 1,
-          cursor: payment === "wish" && !isWishValid ? "not-allowed" : "pointer",
+          cursor:
+            payment === "wish" && !isWishValid ? "not-allowed" : "pointer",
         }}
       >
         Confirm Order
