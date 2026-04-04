@@ -9,12 +9,15 @@
 @import url(./styles/routs/order.css);
 @import url(./styles/routs/profile.css);
 @import url(./styles/routs/purchase.css);
+@import url(./styles/routs/about.css);
+@import url(./styles/routs/contact.css);
 
 /* dasbboard styles */
 @import url(./styles/dashboard/Dproducts.css);
 @import url(./styles/dashboard/Dorders.css);
 @import url(./styles/dashboard/Dabout.css);
 @import url(./styles/dashboard/Dhome.css);
+@import url(./styles/dashboard/Dcontact.css);
 
 /* components styles */
 @import url(./styles/components/Navbar.css);
@@ -39,8 +42,8 @@
   --text: #f9f6f6;
   --background: #0a0507;
   --primary: #ffccd8;
-  --secondary: #6b2e3d;
-  --accent: #873145;
+  --secondary: #5b2e6b;
+  --accent: #6f3187;
 }
 /* :root {
   --text: #000000;

@@ -1,0 +1,31 @@
+.About-Section {
+  display: flex;
+  align-items: center;
+  width: 90vw;
+  padding-left: 5vw;
+  gap: 20px;
+  padding-top: 10px;
+}
+.About-Sub {
+  width: 90vw;
+  padding: 5vw;
+  text-align: center;
+  font-size: 20px;
+}
+.About-Image {
+  width: 250px;
+  border-radius: 10px;
+}
+@media screen and (max-width: 550px) {
+  .About-Section-two {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .About-Section-one {
+    flex-direction: column;
+  }
+  .About-Image {
+    width: 90vw;
+    height: 400px;
+  }
+}

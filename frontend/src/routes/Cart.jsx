@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { getCart, setCart, getProduct } from "../assets/firebase/firestore";
 import SecureLS from "secure-ls";
 import { useNavigate } from "react-router-dom";
+
 const ls = new SecureLS({ encodingType: "aes" });
 
 const Cart = () => {
   const [cart, setCartState] = useState(null);
   const [productsData, setProductsData] = useState({});
   const navigate = useNavigate();
-  // 📦 Fetch cart + real product data
+
+  // 📦 Fetch cart + product data
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -30,21 +32,14 @@ const Cart = () => {
           const product = await getProduct(id);
 
           if (!product || product.stock === 0) {
-            // mark unavailable
             updatedProducts[id].quantity = 0;
             updatedProducts[id].unavailable = true;
-            tempProductsData[id] = product || {
-              name: item.name,
-              image: item.image,
-            };
+            tempProductsData[id] = product || { name: item.name, image: item.image };
           } else {
             tempProductsData[id] = product;
-
-            // adjust quantity if it exceeds stock
             if (item.quantity > product.stock) {
               updatedProducts[id].quantity = product.stock;
             }
-
             updatedProducts[id].unavailable = false;
           }
         }
@@ -53,7 +48,6 @@ const Cart = () => {
           userId: uid,
           products: updatedProducts,
         });
-
         setProductsData(tempProductsData);
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -63,7 +57,7 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // 🔁 update cart in Firestore + state
+  // 🔁 Update cart in Firestore + state
   const updateUserCart = async (updatedProducts) => {
     const uid = ls.get("uid");
 
@@ -78,7 +72,7 @@ const Cart = () => {
     });
   };
 
-  // ➕ increase quantity with stock limit
+  // ➕ increase quantity
   const increaseQty = (id) => {
     const updated = { ...cart.products };
     const product = productsData[id];
@@ -96,7 +90,7 @@ const Cart = () => {
   // ➖ decrease quantity
   const decreaseQty = (id) => {
     const updated = { ...cart.products };
-    if (updated[id].unavailable) return; // no changing if unavailable
+    if (updated[id].unavailable) return;
 
     if (updated[id].quantity === 1) {
       delete updated[id];
@@ -126,6 +120,8 @@ const Cart = () => {
     }
   });
 
+  const hasItems = productList.length > 0 && productList.some(([_, item]) => !item.unavailable && item.quantity > 0);
+
   return (
     <div className="page Cart-page">
       <div>
@@ -146,7 +142,7 @@ const Cart = () => {
                 <div className="Cart-Item">
                   <div className="Cart-Item-Data">
                     <img
-                      src={product?.images?.[0]  || item.image}
+                      src={product?.images?.[0] || item.image}
                       alt={product?.name || item.name}
                       className="Cart-Item-img"
                     />
@@ -179,11 +175,13 @@ const Cart = () => {
           })
         )}
       </div>
-      <div className="Cart-Button">
-        <h2>Total: ${totalPrice}</h2>
 
-        <button onClick={() => navigate("/order")}>Place Order</button>
-      </div>
+      {hasItems && (
+        <div className="Cart-Button">
+          <h2>Total: ${totalPrice}</h2>
+          <button onClick={() => navigate("/order")}>Place Order</button>
+        </div>
+      )}
     </div>
   );
 };

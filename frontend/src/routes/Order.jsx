@@ -18,17 +18,12 @@ const Order = () => {
   const [cart, setCartState] = useState(null);
   const [productsData, setProductsData] = useState({});
   const [location, setLocation] = useState(null);
-
-  // 🔥 NEW
   const [defaultLocation, setDefaultLocation] = useState(null);
   const [useDefault, setUseDefault] = useState(false);
-
   const [payment, setPayment] = useState("cash");
   const [wishRef, setWishRef] = useState("");
 
-  // =========================
   // 🔹 FETCH CART
-  // =========================
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -50,15 +45,10 @@ const Order = () => {
           if (!product || product.stock === 0) {
             updatedProducts[id].quantity = 0;
             updatedProducts[id].unavailable = true;
-
-            tempProductsData[id] = product || {
-              name: item.name,
-              image: item.image,
-            };
+            tempProductsData[id] = product || { name: item.name, image: item.image };
           } else {
             tempProductsData[id] = product;
-            if (item.quantity > product.stock)
-              updatedProducts[id].quantity = product.stock;
+            if (item.quantity > product.stock) updatedProducts[id].quantity = product.stock;
             updatedProducts[id].unavailable = false;
           }
         }
@@ -73,9 +63,7 @@ const Order = () => {
     fetchCart();
   }, []);
 
-  // =========================
   // 🔹 FETCH USER DEFAULT LOCATION
-  // =========================
   useEffect(() => {
     const fetchUserLocation = async () => {
       try {
@@ -87,36 +75,26 @@ const Order = () => {
 
         if (snap.exists()) {
           const data = snap.data();
-
-          if (data?.location?.address) {
-            setDefaultLocation(data.location);
-          }
+          if (data?.location?.address) setDefaultLocation(data.location);
         }
       } catch (err) {
         console.error("Error fetching user location:", err);
       }
     };
-
     fetchUserLocation();
   }, []);
 
-  // =========================
   // 🔹 TOTAL PRICE
-  // =========================
   const productList = cart?.products ? Object.entries(cart.products) : [];
   let totalPrice = 0;
-
   productList.forEach(([id, item]) => {
     const product = productsData[id];
-    if (product && !item.unavailable)
-      totalPrice += item.quantity * product.price;
+    if (product && !item.unavailable) totalPrice += item.quantity * product.price;
   });
 
   const isWishValid = payment === "wish" && wishRef.trim().length === 9;
 
-  // =========================
   // 🔹 USE DEFAULT LOCATION
-  // =========================
   const handleUseDefault = () => {
     if (defaultLocation) {
       setLocation(defaultLocation);
@@ -124,16 +102,12 @@ const Order = () => {
     }
   };
 
-  // =========================
   // 🔹 ORDER
-  // =========================
   const handleOrder = async () => {
     const uid = ls.get("uid");
 
     if (!location) return alert("Please select your location");
-
-    if (payment === "wish" && !isWishValid)
-      return alert("Transaction reference must be exactly 9 characters");
+    if (payment === "wish" && !isWishValid) return alert("Transaction reference must be exactly 9 characters");
 
     try {
       const orderDoc = await addDoc(collection(db, "orders"), {
@@ -141,14 +115,8 @@ const Order = () => {
         products: cart.products,
         location,
         paymentMethod: payment,
-        paymentDetails:
-          payment === "wish" ? { reference: wishRef.trim() } : null,
-        paymentStatus:
-          payment === "cash"
-            ? "pending"
-            : payment === "wish"
-              ? "waiting_confirmation"
-              : "pending_card",
+        paymentDetails: payment === "wish" ? { reference: wishRef.trim() } : null,
+        paymentStatus: payment === "cash" ? "pending" : payment === "wish" ? "waiting_confirmation" : "pending_card",
         total: totalPrice,
         status: "pending",
         createdAt: new Date(),
@@ -160,7 +128,6 @@ const Order = () => {
       }));
 
       const userRef = doc(db, "users", uid);
-
       await updateDoc(userRef, {
         purchases: arrayUnion({
           orderId: orderDoc.id,
@@ -176,18 +143,13 @@ const Order = () => {
       // 🔻 REDUCE STOCK
       for (let [id, item] of Object.entries(cart.products)) {
         const productRef = doc(db, "products", id);
-
         const productSnap = await getDoc(productRef);
         if (!productSnap.exists()) continue;
-
         const productData = productSnap.data();
-
         const newStock = (productData.stock || 0) - item.quantity;
-
-        await updateDoc(productRef, {
-          stock: newStock < 0 ? 0 : newStock,
-        });
+        await updateDoc(productRef, { stock: newStock < 0 ? 0 : newStock });
       }
+
       setCartState({ userId: uid, products: {} });
       setLocation(null);
       setWishRef("");
@@ -209,15 +171,10 @@ const Order = () => {
         {productList.map(([id, item]) => {
           const product = productsData[id];
           if (!product) return null;
-
           return (
             <div key={id}>
               <div className="Cart-Item-Data Purchase-Item-Data">
-                <img
-                  src={product?.images?.[0] || item.image}
-                  alt={product?.name || item.name}
-                  className="Cart-Item-img"
-                />
+                <img src={product?.images?.[0] || item.image} alt={product?.name || item.name} className="Cart-Item-img" />
                 <h3>{product?.name || item.name}</h3>
                 <p>${product?.price}</p>
                 <p>Qty: {item.quantity}</p>
@@ -237,45 +194,28 @@ const Order = () => {
         <div className="Order-Map-Holder">
           <p>Select Delivery Location</p>
 
-          {/* ✅ DEFAULT LOCATION OPTION */}
           {defaultLocation && !useDefault && (
             <div>
               <p>Use your saved address?</p>
-              <p>
-                <strong>{defaultLocation.address}</strong>
-              </p>
-
+              <p><strong>{defaultLocation.address}</strong></p>
               <button onClick={handleUseDefault}>Use this</button>
-              <button onClick={() => setUseDefault(false)}>
-                Choose another
-              </button>
+              <button onClick={() => setUseDefault(false)}>Choose another</button>
             </div>
           )}
 
-          {/* ✅ MAP */}
           {!useDefault && (
             <div className="Order-Map">
-              <MapPicker
-                onSelect={(loc) => {
-                  setLocation(loc);
-                  setUseDefault(false);
-                }}
-              />
+              <MapPicker onSelect={(loc) => { setLocation(loc); setUseDefault(false); }} />
             </div>
           )}
 
-          {/* ✅ SHOW ADDRESS */}
           {location && (
-            <p>
-              Selected: <strong>{location.address}</strong>
-            </p>
+            <p>Selected: <strong>{location.address}</strong></p>
           )}
         </div>
 
-        {/* PAYMENT */}
         <div>
           <p>Payment Method</p>
-
           <select value={payment} onChange={(e) => setPayment(e.target.value)}>
             <option value="cash">Cash on Delivery</option>
             <option value="wish">Wish Transfer</option>
@@ -285,13 +225,8 @@ const Order = () => {
           {payment === "wish" && (
             <div className="Payment-Box">
               <p>Send the total via Whish Money:</p>
-              <p>
-                <strong>Phone:</strong> 81284452
-              </p>
-              <p>
-                <strong>Name:</strong> Omar Kouzi
-              </p>
-
+              <p><strong>Phone:</strong> 81284452</p>
+              <p><strong>Name:</strong> Omar Kouzi</p>
               <input
                 type="text"
                 placeholder="Transaction reference (9 chars)"
@@ -299,25 +234,29 @@ const Order = () => {
                 maxLength={9}
                 onChange={(e) => setWishRef(e.target.value)}
               />
-
               {wishRef && wishRef.length !== 9 && (
-                <p style={{ color: "red", fontSize: "12px" }}>
-                  Reference must be exactly 9 characters
-                </p>
+                <p style={{ color: "red", fontSize: "12px" }}>Reference must be exactly 9 characters</p>
               )}
+
+              {/* OPEN WISH MONEY BUTTON */}
+              <button
+                onClick={() => {
+                  window.open("https://whish.money/invoice/pay/?q=UMfWkvIMQ", "_blank");
+                }}
+                style={{ marginTop: "10px" }}
+              >
+                Go to Wish Transfer (${totalPrice})
+              </button>
             </div>
           )}
 
-          {payment === "card" && (
-            <div className="Payment-Box">
-              <p>Credit Card payment coming soon</p>
-            </div>
-          )}
+          {payment === "card" && <div className="Payment-Box"><p>Credit Card payment coming soon</p></div>}
         </div>
       </div>
 
       <br />
 
+      {/* CONFIRM ORDER */}
       <button
         onClick={handleOrder}
         disabled={payment === "wish" && !isWishValid}
@@ -326,13 +265,11 @@ const Order = () => {
           left: "39%",
           marginBottom: "10px",
           opacity: payment === "wish" && !isWishValid ? 0.5 : 1,
-          cursor:
-            payment === "wish" && !isWishValid ? "not-allowed" : "pointer",
+          cursor: payment === "wish" && !isWishValid ? "not-allowed" : "pointer",
         }}
       >
         Confirm Order
       </button>
-
       <br />
     </div>
   );

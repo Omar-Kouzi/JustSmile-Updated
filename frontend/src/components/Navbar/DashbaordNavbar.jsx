@@ -39,6 +39,7 @@ const DashboardNavbar = () => {
         <NavLink to="/dashboard/Dproducts">Products</NavLink>
         <NavLink to="/dashboard/Dabout">About</NavLink>
         <NavLink to="/dashboard/Dorders">Orders</NavLink>
+        <NavLink to="/dashboard/Dcontact">Emails</NavLink>
       </div>
 
       {/* ☰ Hamburger */}
