@@ -8,7 +8,6 @@ import {
   deleteDoc,
   getDocs,
   setDoc,
-  arrayRemove,
 } from "firebase/firestore";
 
 /**
