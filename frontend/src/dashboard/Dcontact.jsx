@@ -30,7 +30,7 @@ const Dcontact = () => {
     fetchEmails();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p className="page">Loading...</p>;
 
   return (
     <div className="Dcontact page">

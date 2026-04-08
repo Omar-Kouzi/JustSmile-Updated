@@ -6,6 +6,7 @@
 .Order-Data{
   border-right: 1px solid;
   height: 330px;
+  width:400px;
   display: flex;
   flex-direction: column;
   justify-content: center;

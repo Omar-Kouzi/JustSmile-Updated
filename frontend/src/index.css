@@ -64,7 +64,9 @@ $lime-moss: #7B9F28ff;
   margin: 0;
   user-select: none;
   /* border: solid 1px #f9f6f6; */
+  outline: red 1px splid;
 }
+
 a,
 p,
 div,
@@ -130,10 +132,11 @@ input[type="file"] {
   width: 80px;
   border-radius: 5px;
 }
-input  {
+input {
   padding: 8px 12px;
   width: 300px;
   border-radius: 5px;
   border: var(--secondary);
-  margin-top: 5px; font-size: 19px; 
+  margin-top: 5px;
+  font-size: 19px;
 }

@@ -18,12 +18,14 @@ const Order = () => {
   const [cart, setCartState] = useState(null);
   const [productsData, setProductsData] = useState({});
   const [location, setLocation] = useState(null);
+
   const [defaultLocation, setDefaultLocation] = useState(null);
   const [useDefault, setUseDefault] = useState(false);
+
   const [payment, setPayment] = useState("cash");
   const [wishRef, setWishRef] = useState("");
 
-  // 🔹 FETCH CART
+  // FETCH CART
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -67,7 +69,7 @@ const Order = () => {
     fetchCart();
   }, []);
 
-  // 🔹 FETCH USER DEFAULT LOCATION
+  // FETCH USER LOCATION
   useEffect(() => {
     const fetchUserLocation = async () => {
       try {
@@ -85,26 +87,26 @@ const Order = () => {
         console.error("Error fetching user location:", err);
       }
     };
+
     fetchUserLocation();
   }, []);
 
   // 🔹 TOTAL PRICE
   const productList = cart?.products ? Object.entries(cart.products) : [];
+
   let totalPrice = 0;
+
   productList.forEach(([id, item]) => {
     const product = productsData[id];
     if (product && !item.unavailable)
       totalPrice += item.quantity * product.price;
   });
 
-  const isWishValid = payment === "wish" && wishRef.trim().length === 9;
+  const isWishValid = payment === "wish" && wishRef.length === 9;
 
-  // 🔹 USE DEFAULT LOCATION
   const handleUseDefault = () => {
-    if (defaultLocation) {
-      setLocation(defaultLocation);
-      setUseDefault(true);
-    }
+    setLocation(defaultLocation);
+    setUseDefault(true);
   };
 
   // 🔹 ORDER
@@ -120,20 +122,14 @@ const Order = () => {
         userId: uid,
         products: cart.products,
         location,
-        paymentMethod: payment,
-        paymentDetails:
-          payment === "wish" ? { reference: wishRef.trim() } : null,
-        paymentStatus:
-          payment === "cash"
-            ? "pending"
-            : payment === "wish"
-              ? "waiting_confirmation"
-              : "pending_card",
         total: totalPrice,
-        status: "pending",
+        paymentMethod: payment,
         createdAt: new Date(),
-      });
 
+        viewed: false,
+        status: "pending",
+        paymentStatus: "pending",
+      });
       const purchases = Object.entries(cart.products).map(([id, item]) => ({
         productId: id,
         quantity: item.quantity,
@@ -171,34 +167,18 @@ const Order = () => {
     }
   };
 
-  if (!cart || !cart.products) return <div>Loading...</div>;
-  const wishLink = "https://whish.money/invoice/pay/?q=UMfWkvIMQ";
-  const wishAppLink = "whishmoney://invoice/pay/?q=UMfWkvIMQ";
+  if (!cart) return <div className="page">Loading...</div>;
 
-  const openWish = () => {
-    // Try opening app first
-    const timeout = setTimeout(() => {
-      // If app didn’t open in 2s, open web link
-      window.open(wishLink, "_blank");
-    }, 1500);
-
-    window.location.href = wishAppLink;
-  };
   return (
     <div className="page">
       <h1>Order Summary</h1>
       <hr />
-<button
-  onClick={openWish}
-  style={{ marginTop: "10px" }}
->
-  Go to Wish Transfer (${totalPrice})
-</button>
       {/* PRODUCTS */}
       <div>
         {productList.map(([id, item]) => {
           const product = productsData[id];
           if (!product) return null;
+
           return (
             <div key={id}>
               <div className="Cart-Item-Data Purchase-Item-Data">
@@ -216,57 +196,48 @@ const Order = () => {
           );
         })}
       </div>
-
       {/* TOTAL */}
       <h2>Total: ${totalPrice}</h2>
       <hr />
-
-      {/* LOCATION + PAYMENT */}
-      <div className="Order-Map-Cash-Holder">
-        <div className="Order-Map-Holder">
-          <p>Select Delivery Location</p>
-
+      {/* LOCATION */}
+      {/* LOCATION */}
+      <div>
+        <h3>Delivery Location</h3>
+        <div className="Order-Location-Holder">
           {defaultLocation && !useDefault && (
-            <div>
-              <p>Use your saved address?</p>
-              <p>
-                <strong>{defaultLocation.address}</strong>
-              </p>
-              <button onClick={handleUseDefault}>Use this</button>
-              <button onClick={() => setUseDefault(false)}>
-                Choose another
-              </button>
-            </div>
+            <>
+              <p>{defaultLocation.address}</p>
+              <button onClick={handleUseDefault}>Use Saved Address</button>
+            </>
           )}
 
-          {!useDefault && (
-            <div className="Order-Map">
-              <MapPicker
-                onSelect={(loc) => {
-                  setLocation(loc);
-                  setUseDefault(false);
-                }}
-              />
-            </div>
-          )}
+          <MapPicker
+            value={location || defaultLocation}
+            onSelect={(loc) => {
+              setLocation(loc);
+              setUseDefault(false);
+            }}
+          />
 
           {location && (
             <p>
-              Selected: <strong>{location.address}</strong>
+              <strong>Selected:</strong> {location.address}
             </p>
           )}
         </div>
-
-        <div>
-          <p>Payment Method</p>
+      </div>
+      {/* PAYMENT */}
+      <div>
+        <h3>Payment</h3>
+        <div className="Order-Payment-Holder">
           <select value={payment} onChange={(e) => setPayment(e.target.value)}>
-            <option value="cash">Cash on Delivery</option>
-            <option value="wish">Wish Transfer</option>
-            <option value="card">Credit Card</option>
+            <option value="cash">Cash</option>
+            <option value="wish">Wish</option>
+            {/* <option value="card">Card</option> */}
           </select>
-
           {payment === "wish" && (
             <div className="Payment-Box">
+              {" "}
               <p>Send the total via Whish Money:</p>
               <p>
                 <strong>Phone:</strong> 81284452
@@ -276,32 +247,22 @@ const Order = () => {
               </p>
               <input
                 type="text"
-                placeholder="Transaction reference (9 chars)"
+                placeholder="Transaction ID (9 chars)"
                 value={wishRef}
                 maxLength={9}
                 onChange={(e) => setWishRef(e.target.value)}
+                style={{ marginTop: "10px" }}
               />
               {wishRef && wishRef.length !== 9 && (
                 <p style={{ color: "red", fontSize: "12px" }}>
                   Reference must be exactly 9 characters
                 </p>
               )}
-
-              {/* OPEN WISH MONEY BUTTON */}
-              <button
-                onClick={() => {
-                  window.open(
-                    "https://whish.money/invoice/pay/?q=UMfWkvIMQ",
-                    "_blank",
-                  );
-                }}
-                style={{ marginTop: "10px" }}
-              >
-                Go to Wish Transfer (${totalPrice})
-              </button>
+              <p style={{ marginTop: "10px", fontSize: "14px" }}>
+                After paying in the Wish app, enter the transaction ID above.
+              </p>
             </div>
           )}
-
           {payment === "card" && (
             <div className="Payment-Box">
               <p>Credit Card payment coming soon</p>
@@ -309,10 +270,8 @@ const Order = () => {
           )}
         </div>
       </div>
-
       <br />
-
-      {/* CONFIRM ORDER */}
+      {/* CONFIRM ORDER */}{" "}
       <button
         onClick={handleOrder}
         disabled={payment === "wish" && !isWishValid}

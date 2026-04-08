@@ -21,16 +21,13 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // 🔥 FILTER + SORT
   const processedProducts = products
     .filter((p) => p.name?.toLowerCase().includes(search.toLowerCase()))
     .filter((p) => (availableOnly ? p.stock > 0 : true))
     .sort((a, b) => {
-      // 🔥 Always push unavailable to bottom
       if (a.stock === 0 && b.stock > 0) return 1;
       if (a.stock > 0 && b.stock === 0) return -1;
 
-      // Then apply your selected sorting
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
       if (sort === "name") return a.name.localeCompare(b.name);
@@ -42,6 +39,7 @@ const Products = () => {
     <div className="Products-page page">
       <details className="Filter-Wraper">
         <summary>filter</summary>
+
         <div className="Filter">
           <input
             type="text"
@@ -62,7 +60,7 @@ const Products = () => {
           <label>
             <input
               type="checkbox"
-               style={{ width:"25px"}}
+              style={{ width: "25px" }}
               checked={availableOnly}
               onChange={(e) => setAvailableOnly(e.target.checked)}
             />
@@ -77,18 +75,27 @@ const Products = () => {
       <div className="Products-Grid">
         {processedProducts.map((product) => (
           <div key={product.id} className="Product-Card">
+            
             <div className="Product-Image-Wrap">
               <img
                 src={product.images?.[0] || "placeholder-image.jpg"}
                 alt={product.name}
                 className="Product-Card-img primary-img"
               />
+
               {product.images?.[1] && (
                 <img
                   src={product.images[1]}
                   alt={product.name}
                   className="Product-Card-img hover-img"
                 />
+              )}
+
+              {/* UNAVAILABLE LABEL */}
+              {product.stock === 0 && (
+                <div className="Product-Unavailable">
+                  UNAVAILABLE
+                </div>
               )}
             </div>
 
@@ -103,6 +110,7 @@ const Products = () => {
             >
               view more
             </button>
+
           </div>
         ))}
       </div>

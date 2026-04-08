@@ -50,7 +50,7 @@ const Product = () => {
     }
   };
 
-  if (!product) return <div>Loading...</div>;
+  if (!product) return <div className="page">Loading...</div>;
 
   return (
     <div className="Product-page page">

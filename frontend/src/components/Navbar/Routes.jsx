@@ -27,7 +27,7 @@ function Routes() {
     setLoading(false);
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="page">Loading...</div>;
 
   if (isDashboardRoute && role !== "admin") {
     return (

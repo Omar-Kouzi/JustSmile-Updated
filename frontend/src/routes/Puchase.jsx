@@ -8,29 +8,25 @@ import SecureLS from "secure-ls";
 const ls = new SecureLS({ encodingType: "aes" });
 
 const PurchaseDetails = () => {
-  const { id } = useParams(); // orderId
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [order, setOrder] = useState(null);
   const [productsData, setProductsData] = useState({});
 
-  // Fetch order
   useEffect(() => {
     const fetchOrder = async () => {
       try {
         const orderRef = doc(db, "orders", id);
         const snap = await getDoc(orderRef);
 
-        if (!snap.exists()) {
-          console.log("Order not found");
-          return;
-        }
+        if (!snap.exists()) return;
 
         const data = snap.data();
         setOrder(data);
 
-        // Fetch products info
         let temp = {};
+
         for (let [productId] of Object.entries(data.products)) {
           const product = await getProduct(productId);
           if (product) temp[productId] = product;
@@ -38,15 +34,33 @@ const PurchaseDetails = () => {
 
         setProductsData(temp);
       } catch (err) {
-        console.error("Error fetching order:", err);
+        console.error(err);
       }
     };
 
     fetchOrder();
   }, [id]);
 
-  // Calculate total
+  // progress step
+  const getStep = (status) => {
+    switch (status) {
+      case "pending":
+        return 1;
+      case "packing":
+        return 2;
+      case "on_the_way":
+        return 3;
+      case "finished":
+        return 4;
+      default:
+        return 1;
+    }
+  };
+
+  const step = getStep(order?.status);
+
   let total = 0;
+
   if (order?.products) {
     Object.entries(order.products).forEach(([id, item]) => {
       const product = productsData[id];
@@ -56,7 +70,6 @@ const PurchaseDetails = () => {
     });
   }
 
-  // 🔁 Reorder
   const handleReorder = async () => {
     try {
       const uid = ls.get("uid");
@@ -69,28 +82,63 @@ const PurchaseDetails = () => {
 
       navigate("/order");
     } catch (err) {
-      console.error("Reorder error:", err);
+      console.error(err);
     }
   };
 
-  if (!order) return <div>Loading...</div>;
+  if (!order) return <div className="page">Loading...</div>;
 
   return (
-    <div className=" Purchase-Page page">
+    <div className="Purchase-Page page">
       <h1>Purchase Details</h1>
       <hr />
+
       <div className="Purchase-Id">
         <p>
           <strong>Order ID:</strong> {id}
         </p>
+
         <p>
           <strong>Status:</strong> {order.status}
         </p>
+
+        <p>
+          <strong>Payment:</strong> {order.paymentStatus}
+        </p>
+      </div>
+
+      {/* PROGRESS BAR */}
+      <div className="Order-Progress">
+        <div className={`step ${step >= 1 ? "active" : ""}`}>
+          <div className="circle">1</div>
+          <p>Pending</p>
+        </div>
+
+        <div className={`line ${step >= 2 ? "active" : ""}`} />
+
+        <div className={`step ${step >= 2 ? "active" : ""}`}>
+          <div className="circle">2</div>
+          <p>Packing</p>
+        </div>
+
+        <div className={`line ${step >= 3 ? "active" : ""}`} />
+
+        <div className={`step ${step >= 3 ? "active" : ""}`}>
+          <div className="circle">3</div>
+          <p>On The Way</p>
+        </div>
+
+        <div className={`line ${step >= 4 ? "active" : ""}`} />
+
+        <div className={`step ${step >= 4 ? "active" : ""}`}>
+          <div className="circle">4</div>
+          <p>Delivered</p>
+        </div>
       </div>
 
       <hr />
 
-      {/* Products */}
+      {/* PRODUCTS */}
       <div>
         {Object.entries(order.products).map(([id, item]) => {
           const product = productsData[id];
@@ -104,6 +152,7 @@ const PurchaseDetails = () => {
                   alt={product.name}
                   className="Cart-Item-img"
                 />
+
                 <div className="Cart-Item-info">
                   <h3>{product.name}</h3>
                   <p>Price: ${product.price}</p>

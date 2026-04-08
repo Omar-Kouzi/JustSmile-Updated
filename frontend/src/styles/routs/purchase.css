@@ -5,3 +5,44 @@
   width: 90%;
   padding-left: 10px;
 }
+
+
+.Order-Progress {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin: 30px 0;
+}
+
+.step {
+display: flex;
+flex-direction: column;
+align-items: center;
+flex: 1;
+}
+
+.circle {
+width: 35px;
+height: 35px;
+border-radius: 50%;
+background: #ddd;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+}
+
+.step.active .circle {
+background: #4caf50;
+color: white;
+}
+
+.line {
+height: 4px;
+background: #ddd;
+flex: 1;
+}
+
+.line.active {
+background: #4caf50;
+}

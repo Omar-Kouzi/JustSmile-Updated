@@ -1,13 +1,12 @@
-.Filter-Wraper{
+.Filter-Wraper {
   padding: 10px;
 }
-.Filter{
+.Filter {
   display: flex;
   flex-direction: column;
   gap: 5px;
   width: 400px;
 }
-
 
 .Products-Grid {
   display: flex;
@@ -57,8 +56,6 @@
   transition: opacity 0.4s ease;
 }
 
-
-
 /* 🔹 Slight zoom effect on hover */
 .Product-Card:hover .primary-img {
   transform: scale(1.05);
@@ -81,7 +78,25 @@
   border: none;
   text-align: center;
 }
+.Product-Image-Wrap {
+  position: relative;
+}
 
+.Product-Unavailable {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  background: rgb(255, 0, 0);
+  color: rgb(0, 0, 0);
+
+  text-align: center;
+  font-weight: bold;
+  padding: 6px 0;
+
+  letter-spacing: 1px;
+}
 /* Responsive tweaks */
 @media screen and (max-width: 1100px) {
   .Product-Card {
