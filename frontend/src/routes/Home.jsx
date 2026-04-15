@@ -13,11 +13,22 @@ const Home = () => {
   const [aboutText, setAboutText] = useState("");
   const [aboutImg, setAboutImg] = useState("");
 
-  const [logo, setLogo] = useState(""); // home logo
-  const [background, setBackground] = useState(""); // carousel background
-  const [title, setHomeTitle] = useState(""); // carousel background
+  const [logo, setLogo] = useState("");
+  const [background, setBackground] = useState("");
+  const [title, setHomeTitle] = useState("");
 
   const navigate = useNavigate();
+
+  // 🔹 helper: calculate stock from sizes
+  const getTotalStock = (product) => {
+    if (product.sizes && typeof product.sizes === "object") {
+      return Object.values(product.sizes).reduce(
+        (sum, qty) => sum + Number(qty || 0),
+        0,
+      );
+    }
+    return product.stock || 0; // fallback for old products
+  };
 
   // 🔹 Fetch products
   useEffect(() => {
@@ -51,7 +62,7 @@ const Home = () => {
     fetchAbout();
   }, []);
 
-  // 🔹 Fetch Home settings (logo + background)
+  // 🔹 Fetch Home settings
   useEffect(() => {
     const fetchHome = async () => {
       try {
@@ -70,16 +81,16 @@ const Home = () => {
     fetchHome();
   }, []);
 
-  // 🔥 Fade animation logic for carousel
+  // 🔥 Carousel animation
   useEffect(() => {
     if (products.length === 0) return;
 
     const interval = setInterval(() => {
-      setFade(false); // fade out
+      setFade(false);
 
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % products.length);
-        setFade(true); // fade in
+        setFade(true);
       }, 800);
     }, 3000);
 
@@ -88,7 +99,7 @@ const Home = () => {
 
   return (
     <div className="Home-Page page">
-      {/* ===== Home Carousel ===== */}
+      {/* ===== Carousel ===== */}
       <section
         className="Home-Carousel"
         style={{
@@ -105,7 +116,6 @@ const Home = () => {
             <h1 style={{ fontSize: "50px" }}>{title}</h1>
           </div>
 
-          {/* 🔥 Animated product name */}
           <p
             className={`Home-Carousel-Categories ${fade ? "fade-in" : "fade-out"}`}
           >
@@ -119,7 +129,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ===== About Section ===== */}
+      {/* ===== About ===== */}
       <section className="Home-About">
         {aboutImg && (
           <img src={aboutImg} alt="About" className="Home-About-img" />
@@ -130,38 +140,55 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ===== Products Section ===== */}
+      {/* ===== Products ===== */}
       <section className="Home-Products">
         <h1>Products</h1>
+
         <div className="Home-Products-Grid">
           <div className="Home-Products-Cards">
-            {products.map((product) => (
-              <div key={product.id} className="Product-Card">
-                <div className="Product-Image-Wrap">
-                  <img
-                    src={product.images?.[0] || "placeholder-image.jpg"}
-                    alt={product.name}
-                    className="primary-img"
-                  />
-                  {product.images?.[1] && (
+            {products.map((product) => {
+              const totalStock = getTotalStock(product);
+              const isOut = totalStock === 0;
+
+              return (
+                <div key={product.id} className="Product-Card">
+                  <div className="Product-Image-Wrap">
                     <img
-                      src={product.images[1]}
-                      alt={`${product.name}-hover`}
-                      className="hover-img"
+                      src={product.images?.[0] || "placeholder-image.jpg"}
+                      alt={product.name}
+                      className="primary-img"
                     />
-                  )}
+
+                    {product.images?.[1] && (
+                      <img
+                        src={product.images[1]}
+                        alt={`${product.name}-hover`}
+                        className="hover-img"
+                      />
+                    )}
+
+                    {/* ✅ UNAVAILABLE BADGE */}
+                    {isOut && (
+                      <div className="Product-Unavailable">UNAVAILABLE</div>
+                    )}
+                  </div>
+
+                  <p>{product.name}</p>
+
+                  <button
+                    className="Product-Card-Button"
+                    disabled={isOut}
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    style={{
+                      opacity: isOut ? 0.5 : 1,
+                      cursor: isOut ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {isOut ? "Out of stock" : "view more"}
+                  </button>
                 </div>
-
-                <p>{product.name}</p>
-
-                <button
-                  className="Product-Card-Button"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
-                  view more
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <button

@@ -5,7 +5,7 @@ import Dproduct from "../../dashboard/Dproduct";
 import Dorders from "../../dashboard/Dorders";
 import Dabout from "../../dashboard/Dabout";
 import Dcontact from "../../dashboard/Dcontact";
-
+import DorderDetails from "../../dashboard/DorderDetails";
 function DashboardRoutes() {
   return (
     <div>
@@ -15,6 +15,7 @@ function DashboardRoutes() {
         <Route path="/dashboard/Dproduct/:id" element={<Dproduct />} />
         <Route path="/dashboard/Dabout" element={<Dabout />} />
         <Route path="/dashboard/Dorders" element={<Dorders />} />
+        <Route path="/dashboard/Dorder/:id" element={<DorderDetails />} />
         <Route path="/dashboard/Dcontact" element={<Dcontact />} />
       </Routes>
     </div>

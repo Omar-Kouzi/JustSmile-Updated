@@ -14,7 +14,7 @@ function Footer() {
             Facebook
           </a>
           <a
-            href="https://instagram.com/@coze.kouzi"
+            href="https://www.instagram.com/coze.kouzi?igsh=NmliZDB0MGRqZWx2"
             target="_blank"
             rel="noreferrer"
           >

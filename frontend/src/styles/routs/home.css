@@ -5,8 +5,7 @@
 
 .Home-Carousel {
   height: 100vh;
-  /* background-image: url("https://t4.ftcdn.net/jpg/02/51/17/05/360_F_251170513_zEk5QUmamly4M10TULREDPIbC4dVRDUH.jpg"); */
-  background-size: cover; /* make it cover the entire container */
+  background-size: contain; /* make it cover the entire container */
   background-position: center; /* center the image */
   background-repeat: no-repeat; /* prevent repeating */
   display: flex;
@@ -18,7 +17,7 @@
 .Home-Carousel-img {
   width: 250px;
   height: 250px;
-  background-color: aliceblue;
+  object-fit: contain;
 }
 
 .Home-Carousel-Categories {
@@ -51,7 +50,7 @@
 .Home-About-img {
   width: 50vw;
   height: 50vh;
-  background-color: aliceblue;
+  object-fit: cover;
 }
 .Home-About-Data {
   padding-left: 10px;
@@ -89,7 +88,8 @@
     width: 475px;
     overflow: hidden;
   }
-}@media screen and (max-width: 550px) {
+}
+@media screen and (max-width: 550px) {
   .Home-Products-Cards {
     width: 315px;
     overflow: hidden;

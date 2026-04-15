@@ -25,81 +25,77 @@ const Order = () => {
   const [payment, setPayment] = useState("cash");
   const [wishRef, setWishRef] = useState("");
 
-  // FETCH CART
+  // ✅ FETCH CART + VALIDATE AVAILABILITY
   useEffect(() => {
     const fetchCart = async () => {
-      try {
-        const uid = ls.get("uid");
-        if (!uid) return;
+      const uid = ls.get("uid");
+      if (!uid) return;
 
-        const data = await getCart(uid);
-        if (!data?.products) {
-          setCartState(data);
-          return;
+      const data = await getCart(uid);
+      if (!data?.products) return setCartState(data);
+
+      let updatedProducts = { ...data.products };
+      let tempProducts = {};
+
+      for (let [key, item] of Object.entries(data.products)) {
+        const product = await getProduct(item.productId);
+
+        if (!product) {
+          updatedProducts[key].unavailable = true;
+          continue;
         }
 
-        let updatedProducts = { ...data.products };
-        let tempProductsData = {};
+        tempProducts[key] = product;
 
-        for (let [id, item] of Object.entries(data.products)) {
-          const product = await getProduct(id);
+        const sizeStock = product.sizes?.[item.size] || 0;
 
-          if (!product || product.stock === 0) {
-            updatedProducts[id].quantity = 0;
-            updatedProducts[id].unavailable = true;
-            tempProductsData[id] = product || {
-              name: item.name,
-              image: item.image,
-            };
-          } else {
-            tempProductsData[id] = product;
-            if (item.quantity > product.stock)
-              updatedProducts[id].quantity = product.stock;
-            updatedProducts[id].unavailable = false;
+        // ❌ SIZE DOESN'T EXIST OR OUT OF STOCK
+        if (sizeStock <= 0) {
+          updatedProducts[key].unavailable = true;
+          updatedProducts[key].quantity = 0;
+        } else {
+          updatedProducts[key].unavailable = false;
+
+          // ✅ Clamp quantity to available stock
+          if (item.quantity > sizeStock) {
+            updatedProducts[key].quantity = sizeStock;
           }
         }
-
-        setCartState({ userId: ls.get("uid"), products: updatedProducts });
-        setProductsData(tempProductsData);
-      } catch (error) {
-        console.error("Error fetching cart:", error);
       }
+
+      setCartState({ userId: uid, products: updatedProducts });
+      setProductsData(tempProducts);
     };
 
     fetchCart();
   }, []);
 
-  // FETCH USER LOCATION
+  // ✅ FETCH USER LOCATION
   useEffect(() => {
     const fetchUserLocation = async () => {
-      try {
-        const uid = ls.get("uid");
-        if (!uid) return;
+      const uid = ls.get("uid");
+      if (!uid) return;
 
-        const userRef = doc(db, "users", uid);
-        const snap = await getDoc(userRef);
-
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data?.location?.address) setDefaultLocation(data.location);
-        }
-      } catch (err) {
-        console.error("Error fetching user location:", err);
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data?.location) setDefaultLocation(data.location);
       }
     };
 
     fetchUserLocation();
   }, []);
 
-  // 🔹 TOTAL PRICE
   const productList = cart?.products ? Object.entries(cart.products) : [];
 
+  // ✅ TOTAL PRICE (ONLY AVAILABLE ITEMS)
   let totalPrice = 0;
 
   productList.forEach(([id, item]) => {
     const product = productsData[id];
-    if (product && !item.unavailable)
-      totalPrice += item.quantity * product.price;
+    if (!product || item.unavailable) return;
+
+    totalPrice += item.quantity * product.price;
   });
 
   const isWishValid = payment === "wish" && wishRef.length === 9;
@@ -109,26 +105,37 @@ const Order = () => {
     setUseDefault(true);
   };
 
-  // 🔹 ORDER
+  // ✅ ORDER
   const handleOrder = async () => {
     const uid = ls.get("uid");
 
-    if (!location) return alert("Please select your location");
-    if (payment === "wish" && !isWishValid)
-      return alert("Transaction reference must be exactly 9 characters");
+    if (!location) return alert("Select location");
 
     try {
+      // ❌ Remove unavailable items before ordering
+      const validProducts = {};
+      Object.entries(cart.products).forEach(([key, item]) => {
+        if (!item.unavailable && item.quantity > 0) {
+          validProducts[key] = item;
+        }
+      });
+
+      if (Object.keys(validProducts).length === 0) {
+        return alert("No available items in your cart");
+      }
+
       const orderDoc = await addDoc(collection(db, "orders"), {
         userId: uid,
         products: cart.products,
         location,
         total: totalPrice,
         paymentMethod: payment,
+        wishRef: payment === "wish" ? wishRef : null, // ✅ SAVE IT
         createdAt: new Date(),
 
         viewed: false,
         status: "pending",
-        paymentStatus: "pending",
+        paymentStatus: payment === "wish" ? "waiting_verification" : "pending",
       });
       const purchases = Object.entries(cart.products).map(([id, item]) => ({
         productId: id,
@@ -145,18 +152,31 @@ const Order = () => {
         }),
       });
 
+      // ✅ REDUCE STOCK
+      for (let item of Object.values(validProducts)) {
+        const ref = doc(db, "products", item.productId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) continue;
+
+        const data = snap.data();
+        const newSizes = { ...data.sizes };
+
+        if (newSizes[item.size]) {
+          newSizes[item.size] -= item.quantity;
+          if (newSizes[item.size] < 0) newSizes[item.size] = 0;
+        }
+
+        const newStock = Object.values(newSizes).reduce((sum, v) => sum + v, 0);
+
+        await updateDoc(ref, {
+          sizes: newSizes,
+          stock: newStock,
+        });
+      }
+
       await setCart(uid, { userId: uid, products: {} });
 
       alert("Order placed!");
-      // 🔻 REDUCE STOCK
-      for (let [id, item] of Object.entries(cart.products)) {
-        const productRef = doc(db, "products", id);
-        const productSnap = await getDoc(productRef);
-        if (!productSnap.exists()) continue;
-        const productData = productSnap.data();
-        const newStock = (productData.stock || 0) - item.quantity;
-        await updateDoc(productRef, { stock: newStock < 0 ? 0 : newStock });
-      }
 
       setCartState({ userId: uid, products: {} });
       setLocation(null);
@@ -183,48 +203,52 @@ const Order = () => {
             <div key={id}>
               <div className="Cart-Item-Data Purchase-Item-Data">
                 <img
-                  src={product?.images?.[0] || item.image}
-                  alt={product?.name || item.name}
+                  src={product.images?.[0]}
+                  alt={product.name}
                   className="Cart-Item-img"
                 />
-                <h3>{product?.name || item.name}</h3>
-                <p>${product?.price}</p>
-                <p>Qty: {item.quantity}</p>
+
+                <div>
+                  <h3>{product.name}</h3>
+                  <p>${product.price}</p>
+                  <p>Size: {item.size}</p>
+                  <p>Qty: {item.quantity}</p>
+
+                  {/* ❌ UNAVAILABLE MESSAGE */}
+                  {item.unavailable && (
+                    <p style={{ color: "red" }}>
+                      This size is unavailable and won't be included
+                    </p>
+                  )}
+                </div>
               </div>
               <hr />
             </div>
           );
         })}
       </div>
-      {/* TOTAL */}
       <h2>Total: ${totalPrice}</h2>
       <hr />
       {/* LOCATION */}
-      {/* LOCATION */}
       <div>
         <h3>Delivery Location</h3>
-        <div className="Order-Location-Holder">
-          {defaultLocation && !useDefault && (
-            <>
-              <p>{defaultLocation.address}</p>
-              <button onClick={handleUseDefault}>Use Saved Address</button>
-            </>
-          )}
 
-          <MapPicker
-            value={location || defaultLocation}
-            onSelect={(loc) => {
-              setLocation(loc);
-              setUseDefault(false);
-            }}
-          />
+        {defaultLocation && !useDefault && (
+          <>
+            <p>{defaultLocation.address}</p>
+            <button onClick={handleUseDefault}>Use Saved Address</button>
+          </>
+        )}
 
-          {location && (
-            <p>
-              <strong>Selected:</strong> {location.address}
-            </p>
-          )}
-        </div>
+        <MapPicker
+          value={location || defaultLocation}
+          onSelect={(loc) => {
+            setLocation(loc);
+            setUseDefault(false);
+          }}
+        />
+
+        {location && <p>Selected: {location.address}</p>}
       </div>
       {/* PAYMENT */}
       <div>

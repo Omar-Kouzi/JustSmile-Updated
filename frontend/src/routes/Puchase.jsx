@@ -14,6 +14,7 @@ const PurchaseDetails = () => {
   const [order, setOrder] = useState(null);
   const [productsData, setProductsData] = useState({});
 
+  // ✅ FETCH ORDER + PRODUCTS
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -27,9 +28,11 @@ const PurchaseDetails = () => {
 
         let temp = {};
 
-        for (let [productId] of Object.entries(data.products)) {
-          const product = await getProduct(productId);
-          if (product) temp[productId] = product;
+        for (let [, item] of Object.entries(data.products)) {
+          if (!temp[item.productId]) {
+            const product = await getProduct(item.productId);
+            if (product) temp[item.productId] = product;
+          }
         }
 
         setProductsData(temp);
@@ -41,7 +44,7 @@ const PurchaseDetails = () => {
     fetchOrder();
   }, [id]);
 
-  // progress step
+  // ✅ PROGRESS STEP
   const getStep = (status) => {
     switch (status) {
       case "pending":
@@ -59,17 +62,19 @@ const PurchaseDetails = () => {
 
   const step = getStep(order?.status);
 
+  // ✅ TOTAL
   let total = 0;
 
   if (order?.products) {
-    Object.entries(order.products).forEach(([id, item]) => {
-      const product = productsData[id];
+    Object.entries(order.products).forEach(([_, item]) => {
+      const product = productsData[item.productId];
       if (product) {
         total += product.price * item.quantity;
       }
     });
   }
 
+  // ✅ REORDER
   const handleReorder = async () => {
     try {
       const uid = ls.get("uid");
@@ -77,7 +82,7 @@ const PurchaseDetails = () => {
 
       await setCart(uid, {
         userId: uid,
-        products: order.products,
+        products: order.products, // keep same structure
       });
 
       navigate("/order");
@@ -102,12 +107,25 @@ const PurchaseDetails = () => {
           <strong>Status:</strong> {order.status}
         </p>
 
-        <p>
-          <strong>Payment:</strong> {order.paymentStatus}
-        </p>
+        <div>
+          <p>
+            <strong>Payment:</strong>{" "}
+            {order.paymentMethod === "wish" && (
+              <p style={{ color: "orange" }}>
+                Waiting for payment verification
+              </p>
+            )}{" "}
+          </p>
+          {/* ✅ SHOW WISH TRANSACTION ID */}
+          {order.paymentMethod === "wish" && order.wishRef && (
+            <div>
+              <strong>Transaction ID:</strong> {order.wishRef}
+            </div>
+          )}{" "}
+        </div>
       </div>
 
-      {/* PROGRESS BAR */}
+      {/* ✅ PROGRESS BAR */}
       <div className="Order-Progress">
         <div className={`step ${step >= 1 ? "active" : ""}`}>
           <div className="circle">1</div>
@@ -138,14 +156,14 @@ const PurchaseDetails = () => {
 
       <hr />
 
-      {/* PRODUCTS */}
+      {/* ✅ PRODUCTS */}
       <div>
-        {Object.entries(order.products).map(([id, item]) => {
-          const product = productsData[id];
+        {Object.entries(order.products).map(([key, item]) => {
+          const product = productsData[item.productId];
           if (!product) return null;
 
           return (
-            <div key={id}>
+            <div key={key}>
               <div className="Cart-Item-Data Purchase-Item-Data">
                 <img
                   src={product.images?.[0]}
@@ -155,7 +173,9 @@ const PurchaseDetails = () => {
 
                 <div className="Cart-Item-info">
                   <h3>{product.name}</h3>
+
                   <p>Price: ${product.price}</p>
+                  <p>Size: {item.size}</p>
                   <p>Qty: {item.quantity}</p>
                 </div>
               </div>

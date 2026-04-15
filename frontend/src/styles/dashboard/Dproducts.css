@@ -1,12 +1,16 @@
-.Dashboard-Add-Product{
+.Dashboard-Add-Product {
   width: 400px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 20px;
 }
-.Dashboard-Add-Product input{
+.Dashboard-Add-Product input {
   width: 400px;
+}
+.sizes {
+  display: flex;
+  gap: 20px;
 }
 .Product-Image-Wrap {
   position: relative;

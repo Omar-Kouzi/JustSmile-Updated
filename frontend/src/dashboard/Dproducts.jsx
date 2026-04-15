@@ -9,23 +9,29 @@ import {
 import { NavLink } from "react-router-dom";
 
 const Dproducts = () => {
-  // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
-  const [images, setImages] = useState([]);
 
-  // Products state
+  // ❌ removed stock state
+
+  const [images, setImages] = useState([null, null]);
+
+  const [sizes, setSizes] = useState({
+    S: "",
+    M: "",
+    L: "",
+    XL: "",
+  });
+
   const [products, setProducts] = useState([]);
 
-  // Fetch products
   const fetchProducts = async () => {
     try {
       const data = await getProducts();
       setProducts(data);
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error(error);
     }
   };
 
@@ -33,27 +39,46 @@ const Dproducts = () => {
     fetchProducts();
   }, []);
 
-  // Handle image select (max 2)
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 2);
-    setImages(files);
-  };
-
-  // Remove image before upload
-  const removeImage = (index) => {
-    const updated = images.filter((_, i) => i !== index);
+  const handleImageChange = (file, index) => {
+    const updated = [...images];
+    updated[index] = file;
     setImages(updated);
   };
 
-  // Add product
+  const removeImage = (index) => {
+    const updated = [...images];
+    updated[index] = null;
+    setImages(updated);
+  };
+
+  const handleSizeChange = (size, value) => {
+    setSizes({ ...sizes, [size]: value });
+  };
+
+  // ✅ LIVE STOCK CALCULATION
+  const totalStock = Object.values(sizes).reduce(
+    (sum, qty) => sum + Number(qty || 0),
+    0,
+  );
+
   const handleSubmit = async () => {
-    if (!name || !description || !price || !stock) {
+    if (!name || !description || !price) {
       alert("Fill all fields");
       return;
     }
 
-    if (images.length !== 2) {
-      alert("Upload exactly 2 images");
+    if (!images[0] || !images[1]) {
+      alert("Upload both images");
+      return;
+    }
+
+    const filteredSizes = {};
+    Object.entries(sizes).forEach(([s, v]) => {
+      if (Number(v) > 0) filteredSizes[s] = parseInt(v);
+    });
+
+    if (Object.keys(filteredSizes).length === 0) {
+      alert("Add at least one size with stock");
       return;
     }
 
@@ -64,29 +89,27 @@ const Dproducts = () => {
         name,
         description,
         price: parseFloat(price),
-        stock: parseInt(stock),
+        stock: totalStock, // ✅ AUTO CALCULATED
         images: urls,
+        sizes: filteredSizes,
         createdAt: new Date(),
       });
 
-      // Reset form
       setName("");
       setDescription("");
       setPrice("");
-      setStock("");
-      setImages([]);
+      setImages([null, null]);
+      setSizes({ S: "", M: "", L: "", XL: "" });
 
       fetchProducts();
       alert("Product added!");
     } catch (error) {
-      console.error("Add error:", error);
+      console.error(error);
     }
   };
 
-  // Delete product
   const handleDelete = async (product) => {
-    const confirmDelete = window.confirm("Delete this product?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this product?")) return;
 
     try {
       if (product.images?.length) {
@@ -96,7 +119,7 @@ const Dproducts = () => {
       await deleteDoc(doc(db, "products", product.id));
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
     } catch (error) {
-      console.error("Delete error:", error);
+      console.error(error);
     }
   };
 
@@ -104,9 +127,9 @@ const Dproducts = () => {
     <div className="page">
       <h1>Dashboard - Products</h1>
 
-      {/* Add Product */}
       <details>
         <summary>Add Product</summary>
+
         <div className="Dashboard-Add-Product">
           <input
             type="text"
@@ -114,61 +137,57 @@ const Dproducts = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+
           <input
             type="text"
             placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+
           <input
             type="number"
             placeholder="Price"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
-          <input
-            type="number"
-            placeholder="Stock"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-          />
 
-          {/* Custom file button */}
-          <div>
-            <button
-              className="custom-file-button"
-              onClick={() => document.getElementById("imagesInput").click()}
-              style={{
-                backgroundColor: "#ffccd8",
-                padding: "8px 12px",
-                borderRadius: "5px",
-                marginBottom: "5px",
-              }}
-            >
-              Upload Images (max 2)
-            </button>
-            <input
-              id="imagesInput"
-              type="file"
-              multiple
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleImageChange}
-            />
+          {/* ❌ REMOVED stock input */}
+
+          {/* ✅ Sizes */}
+          <p>Select Sizes:</p>
+          <div className="sizes">
+            {["S", "M", "L", "XL"].map((size) => (
+              <div key={size}>
+                <label>{size}</label>
+                <input
+                  type="number"
+                  value={sizes[size]}
+                  onChange={(e) => handleSizeChange(size, e.target.value)}
+                  style={{ marginLeft: "10px", width: "70px" }}
+                />
+              </div>
+            ))}
           </div>
 
-          {/* 👀 Preview */}
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-            {images.map((img, i) => (
-              <div key={i} style={{ position: "relative" }}>
+          {/* ✅ LIVE STOCK DISPLAY */}
+          <p>
+            <strong>Total Stock: {totalStock}</strong>
+          </p>
+
+          {/* MAIN IMAGE */}
+          <div style={{ marginBottom: "20px" }}>
+            <p>Main Image</p>
+
+            {images[0] && (
+              <div style={{ position: "relative", display: "inline-block" }}>
                 <img
-                  src={URL.createObjectURL(img)}
-                  width="200"
-                  alt="preview"
-                  style={{ borderRadius: "5px" }}
+                  src={URL.createObjectURL(images[0])}
+                  alt="main"
+                  style={{ width: "200px", borderRadius: "5px" }}
                 />
                 <button
-                  onClick={() => removeImage(i)}
+                  onClick={() => removeImage(0)}
                   style={{
                     position: "absolute",
                     top: "-5px",
@@ -177,7 +196,6 @@ const Dproducts = () => {
                     color: "white",
                     border: "none",
                     borderRadius: "50%",
-                    cursor: "pointer",
                     width: "20px",
                     height: "20px",
                   }}
@@ -185,7 +203,68 @@ const Dproducts = () => {
                   ×
                 </button>
               </div>
-            ))}
+            )}
+
+            <button
+              onClick={() => document.getElementById("mainInput").click()}
+              className="custom-file-button"
+            >
+              Upload Main Image
+            </button>
+
+            <input
+              id="mainInput"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleImageChange(e.target.files[0], 0)}
+            />
+          </div>
+
+          {/* SECONDARY IMAGE */}
+          <div style={{ marginBottom: "20px" }}>
+            <p>Secondary Image</p>
+
+            {images[1] && (
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <img
+                  src={URL.createObjectURL(images[1])}
+                  alt="secondary"
+                  style={{ width: "200px", borderRadius: "5px" }}
+                />
+                <button
+                  onClick={() => removeImage(1)}
+                  style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    background: "red",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => document.getElementById("secondaryInput").click()}
+              className="custom-file-button"
+            >
+              Upload Secondary Image
+            </button>
+
+            <input
+              id="secondaryInput"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleImageChange(e.target.files[0], 1)}
+            />
           </div>
 
           <button onClick={handleSubmit}>Add Product</button>
@@ -212,14 +291,14 @@ const Dproducts = () => {
                 />
               )}
             </div>
-
             <p>{product.name}</p>
             <p>${product.price}</p>
-
+            <p>Stock: {product.stock}</p> {/* ✅ now always correct */}
             <div className="product-buttons">
               <NavLink to={`/dashboard/Dproduct/${product.id}`}>
                 <button>View More</button>
               </NavLink>
+
               <button
                 onClick={() => handleDelete(product)}
                 className="delete-btn"

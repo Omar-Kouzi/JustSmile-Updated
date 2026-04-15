@@ -21,12 +21,34 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  // ✅ NEW: calculate total stock (sizes OR fallback)
+  const getTotalStock = (product) => {
+    if (product.sizes && typeof product.sizes === "object") {
+      return Object.values(product.sizes).reduce(
+        (sum, qty) => sum + Number(qty || 0),
+        0
+      );
+    }
+    return product.stock || 0;
+  };
+
   const processedProducts = products
-    .filter((p) => p.name?.toLowerCase().includes(search.toLowerCase()))
-    .filter((p) => (availableOnly ? p.stock > 0 : true))
+    .filter((p) =>
+      p.name?.toLowerCase().includes(search.toLowerCase())
+    )
+
+    // ✅ FIXED availability filter
+    .filter((p) =>
+      availableOnly ? getTotalStock(p) > 0 : true
+    )
+
     .sort((a, b) => {
-      if (a.stock === 0 && b.stock > 0) return 1;
-      if (a.stock > 0 && b.stock === 0) return -1;
+      const stockA = getTotalStock(a);
+      const stockB = getTotalStock(b);
+
+      // ✅ FIXED stock priority
+      if (stockA === 0 && stockB > 0) return 1;
+      if (stockA > 0 && stockB === 0) return -1;
 
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
@@ -73,46 +95,48 @@ const Products = () => {
       <h1>Products</h1>
 
       <div className="Products-Grid">
-        {processedProducts.map((product) => (
-          <div key={product.id} className="Product-Card">
-            
-            <div className="Product-Image-Wrap">
-              <img
-                src={product.images?.[0] || "placeholder-image.jpg"}
-                alt={product.name}
-                className="Product-Card-img primary-img"
-              />
+        {processedProducts.map((product) => {
+          const totalStock = getTotalStock(product); // ✅ use here
 
-              {product.images?.[1] && (
+          return (
+            <div key={product.id} className="Product-Card">
+              <div className="Product-Image-Wrap">
                 <img
-                  src={product.images[1]}
+                  src={product.images?.[0] || "placeholder-image.jpg"}
                   alt={product.name}
-                  className="Product-Card-img hover-img"
+                  className="Product-Card-img primary-img"
                 />
-              )}
 
-              {/* UNAVAILABLE LABEL */}
-              {product.stock === 0 && (
-                <div className="Product-Unavailable">
-                  UNAVAILABLE
-                </div>
-              )}
+                {product.images?.[1] && (
+                  <img
+                    src={product.images[1]}
+                    alt={product.name}
+                    className="Product-Card-img hover-img"
+                  />
+                )}
+
+                {/* ✅ FIXED UNAVAILABLE */}
+                {totalStock === 0 && (
+                  <div className="Product-Unavailable">
+                    UNAVAILABLE
+                  </div>
+                )}
+              </div>
+
+              <div className="Product-Card-Name">
+                <p>{product.name}</p>
+                <p>${product.price}</p>
+              </div>
+
+              <button
+                className="Product-Card-Button"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
+                view more
+              </button>
             </div>
-
-            <div className="Product-Card-Name">
-              <p>{product.name}</p>
-              <p>${product.price}</p>
-            </div>
-
-            <button
-              className="Product-Card-Button"
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              view more
-            </button>
-
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
